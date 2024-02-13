@@ -1,0 +1,8 @@
+bcrypt==4.1.2
+dnspython==2.5.0
+extra-streamlit-components==0.1.60
+pandas==2.1.4
+pyjwt==2.8.0
+pymongo==3.12.0
+streamlit==1.31.0
+streamlit-option-menu==0.3.12
