@@ -5,6 +5,7 @@ import extra_streamlit_components as stx
 
 from datetime import datetime, timedelta
 
+from . import mongodb_tools as db_tools
 
 def hash_pw(password):
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode()
@@ -117,13 +118,13 @@ class Authenticator:
         client's browser.
         '''
         # Retrieve data from database
-        # if check_pw(self.password, stored_hash):
-        if True:
+        user = db_tools.get_user(self.userid)
+        if user is not None and check_pw(self.password, user['hash']):
             # Session state
             st.session_state['authenticated'] = True
             st.session_state['user'] = {
-                'userid': 'lucas',
-                'name': 'Lucas'
+                'userid': user['userid'],
+                'name': user['name']
             }
             # Cookie
             self.exp_date = self._set_exp_date()

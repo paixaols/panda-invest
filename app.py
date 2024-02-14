@@ -1,13 +1,12 @@
 import streamlit as st
-
 from streamlit_option_menu import option_menu
+
+st.set_page_config(page_title='Home', layout='wide')
 
 from stauth import Authenticator
 
 # Settings
 # ==============================================================================
-st.set_page_config(page_title='Home', layout='wide')
-
 authenticator = Authenticator(
     cookie_name = 'some_cookie_name',
     key = 'some_signature_key',
@@ -20,13 +19,13 @@ authenticator.login(
     location='sidebar',
     fields={
         'form name':'Entrar', 
-        'userid':'Usuário', 
+        'userid':'E-mail', 
         'password':'Senha',
         'submit':'Entrar'
     }
 )
 if  st.session_state["authenticated"] is False:
-    st.sidebar.error('Username/password is incorrect')
+    st.sidebar.error('E-mail e/ou senha incorreto')
 
 if st.session_state['authenticated']:
     with st.sidebar:
