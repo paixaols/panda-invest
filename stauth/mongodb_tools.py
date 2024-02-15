@@ -1,5 +1,6 @@
 import streamlit as st
 
+from .hash import hash_pw
 from db import mongodb_engine as engine
 
 
@@ -13,7 +14,7 @@ db = get_database()
 def get_user(userid: str, fields: dict={'user_col': 'users',
                                         'id_field': 'email',
                                         'name_field': 'name',
-                                        'pw_hash_field': 'password'}) -> dict:
+                                        'pw_hash_field': 'hashed_pw'}) -> dict:
     '''
     Retrieves user info from the database.
 
@@ -38,3 +39,26 @@ def get_user(userid: str, fields: dict={'user_col': 'users',
             'hash': doc.get(fields['pw_hash_field'])
         }
     return None
+
+
+def create_new_user(new_user_data: dict) -> bool:
+    '''
+    Inserts new user in the database.
+
+    Parameters
+    ----------
+    new_user_data: dict
+        Data from the registration form.
+
+    Returns
+    -------
+    bool
+        Acknowledgement of the insertion operation.
+    '''
+    new_user = {
+        'email': new_user_data['userid'],
+        'name': new_user_data['name'],
+        'hashed_pw': hash_pw(new_user_data['password'])
+    }
+    result = db['users'].insert_one(new_user)
+    return result.acknowledged

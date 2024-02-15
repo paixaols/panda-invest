@@ -1,4 +1,3 @@
-import bcrypt
 import jwt
 import streamlit as st
 import extra_streamlit_components as stx
@@ -6,13 +5,7 @@ import extra_streamlit_components as stx
 from datetime import datetime, timedelta
 
 from . import mongodb_tools as db_tools
-
-def hash_pw(password):
-    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode()
-
-
-def check_pw(password, hashedpw):
-    return bcrypt.checkpw(password.encode('utf-8'), hashedpw.encode('utf-8'))
+from .hash import check_pw
 
 
 class Authenticator:
@@ -137,8 +130,8 @@ class Authenticator:
         else:
             st.session_state['authenticated'] = False
 
-    def login(self, location: str='main', fields: dict={'form name':'Login', 
-                                                        'userid':'Username', 
+    def login(self, location: str='main', fields: dict={'form name':'Login',
+                                                        'userid':'Username',
                                                         'password':'Password',
                                                         'submit':'Login'}) -> bool:
         '''
@@ -164,9 +157,9 @@ class Authenticator:
             self._check_cookie()
             if not st.session_state['authenticated']:
                 if location == 'main':
-                    login_form = st.form('Login')
+                    login_form = st.form('login')
                 elif location == 'sidebar':
-                    login_form = st.sidebar.form('Login')
+                    login_form = st.sidebar.form('login')
 
                 login_form.subheader(
                     'Login' if 'form name' not in fields else fields['form name']
@@ -178,10 +171,10 @@ class Authenticator:
                     'Password' if 'password' not in fields else fields['password'],
                     type='password'
                 )
-
                 submitted = login_form.form_submit_button(
                     'Login' if 'submit' not in fields else fields['submit']
                 )
+
                 if submitted:
                     self._check_credentials()
 
@@ -220,3 +213,124 @@ class Authenticator:
         elif location == 'unrendered':
             if st.session_state['authenticated']:
                 self._implement_logout()
+
+    def _validate_registration_data(self, new_user_data: dict) -> tuple:
+        '''
+        Perform validation checks on the data.
+
+        Parameters
+        ----------
+        new_user_data: dict
+            Data from the registration form.
+
+        Returns
+        -------
+        bool
+            Boolean indicating the validity of the data.
+        str
+            Message explaining validation status.
+        '''
+        if '' in new_user_data.values():
+            return False, 'All fields are required'
+        if new_user_data['password'] != new_user_data['repeat pw']:
+            return False, 'Passwords do not match'
+        # if len(new_user_data['password']) < 8:
+        #     return False, 'Password must be at least 8 characters long'
+        return True, ''
+
+    def _create_new_user(self, new_user_data: dict) -> tuple:
+        '''
+        Inserts new user in the database.
+
+        Parameters
+        ----------
+        new_user_data: dict
+            Data from the registration form.
+
+        Returns
+        -------
+        bool
+            Whether user creation was successful or not.
+        str
+            Success or error message.
+        '''
+        user = db_tools.get_user(new_user_data.get('userid'))
+        if user is not None:
+            return False, 'User already registered'
+
+        success = db_tools.create_new_user(new_user_data)
+        if success:
+            return True, 'User registered successfully'
+        else:
+            return False, 'Registration failed, please try again later'
+
+    def register_user(self, location='main', fields: dict={'form name':'Register',
+                                                           'userid':'Username',
+                                                           'name': 'Name',
+                                                           'password':'Password',
+                                                           'repeat password':'Repeat password',
+                                                           'submit':'Register'}) -> bool:
+        '''
+        Creates a user registration widget and inserts a new profile in the 
+        database.
+
+        Parameters
+        ----------
+        location: str
+            The location of the registration widget i.e. main or sidebar.
+        fields: dict
+            The rendered names of the fields/buttons.
+
+        Returns
+        -------
+        bool
+            The status of registration, None: form not submitted, False: error 
+            during registration, True: registration successful.
+        str
+            Success or error message.
+        '''
+        if location not in ['main', 'sidebar']:
+            raise ValueError("Location must be one of 'main' or 'sidebar'") 
+
+        if location == 'main':
+            register_user_form = st.form('register-user')
+        elif location == 'sidebar':
+            register_user_form = st.sidebar.form('register-user')
+
+        register_user_form.subheader(
+            'Register' if 'form name' not in fields else fields['form name']
+        )
+        userid = register_user_form.text_input(
+            'Username' if 'userid' not in fields else fields['userid']
+        )
+        name = register_user_form.text_input(
+            'Name' if 'name' not in fields else fields['name']
+        )
+        password = register_user_form.text_input(
+            'Password' if 'password' not in fields else fields['password'],
+            type='password'
+        )
+        repeat_pw = register_user_form.text_input(
+            'Repeat password' if 'repeat password' not in fields else fields['repeat password'],
+            type='password'
+        )
+        submitted = register_user_form.form_submit_button(
+            'Register' if 'submit' not in fields else fields['submit']
+        )
+
+        if submitted:
+            new_user_data = {
+                'userid': userid,
+                'name': name,
+                'password': password,
+                'repeat pw': repeat_pw
+            }
+
+            validation_complete, msg = self._validate_registration_data(new_user_data)
+            if not validation_complete:
+                return False, msg
+
+            registration_complete, msg = self._create_new_user(new_user_data)
+            return registration_complete, msg
+
+        return None, ''

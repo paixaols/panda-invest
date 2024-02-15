@@ -1,9 +1,10 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
 
-st.set_page_config(page_title='Home', layout='wide')
+# st.set_page_config(page_title='Home', layout='wide')
 
 from stauth import Authenticator
+from views.public import home
 
 # Settings
 # ==============================================================================
@@ -15,18 +16,6 @@ authenticator = Authenticator(
 
 # Main app
 # ==============================================================================
-authenticator.login(
-    location='sidebar',
-    fields={
-        'form name':'Entrar', 
-        'userid':'E-mail', 
-        'password':'Senha',
-        'submit':'Entrar'
-    }
-)
-if  st.session_state["authenticated"] is False:
-    st.sidebar.error('E-mail e/ou senha incorreto')
-
 if st.session_state['authenticated']:
     with st.sidebar:
         st.write(f'Bem-vindo(a) *{st.session_state["user"]["name"]}*')
@@ -40,9 +29,9 @@ if st.session_state['authenticated']:
         )
         st.divider()
 else:
-    selected_page = None
+    selected_page = 'home'
 
 # Views
 # ==============================================================================
-if selected_page is not None:
-    st.write(selected_page)
+if selected_page == 'home':
+    home.create_page(authenticator)
