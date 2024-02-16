@@ -103,32 +103,51 @@ class Authenticator:
                             }
                             st.session_state['authenticated'] = True
 
-    def _check_credentials(self):
+    def _check_credentials(self, userid, password, save_state=True):
         '''
         Checks the validity of the entered credentials. If the credentials are 
         valid, authentication status is stored in session state, under the key 
         "authenticated", and the authentication cookie is stored on the 
         client's browser.
+
+        Parameters
+        ----------
+        userid: str
+            ID of the user to be verified.
+        password: str
+            Password of the user to be verified.
+        save_state: bool
+            True: authentication status and credentials (if valid) are stored 
+            in session state and cookie; False: nothing is stored.
+
+        Returns
+        -------
+        bool
+            Validity of the credentials.
         '''
         # Retrieve data from database
-        user = db_tools.get_user(self.userid)
-        if user is not None and check_pw(self.password, user['hash']):
-            # Session state
-            st.session_state['authenticated'] = True
-            st.session_state['user'] = {
-                'userid': user['userid'],
-                'name': user['name']
-            }
-            # Cookie
-            self.exp_date = self._set_exp_date()
-            self.token = self._token_encode()
-            self.cookie_manager.set(
-                self.cookie_name,
-                self.token,
-                expires_at=datetime.now() + timedelta(days=self.cookie_expiry_days)
-            )
+        user = db_tools.get_user(userid)
+        if user is not None and check_pw(password, user['hash']):
+            if save_state:
+                # Session state
+                st.session_state['authenticated'] = True
+                st.session_state['user'] = {
+                    'userid': user['userid'],
+                    'name': user['name']
+                }
+                # Cookie
+                self.exp_date = self._set_exp_date()
+                self.token = self._token_encode()
+                self.cookie_manager.set(
+                    self.cookie_name,
+                    self.token,
+                    expires_at=datetime.now() + timedelta(days=self.cookie_expiry_days)
+                )
+            return True
         else:
-            st.session_state['authenticated'] = False
+            if save_state:
+                st.session_state['authenticated'] = False
+            return False
 
     def login(self, location: str='main', fields: dict={'form name':'Login',
                                                         'userid':'Username',
@@ -164,10 +183,10 @@ class Authenticator:
                 login_form.subheader(
                     'Login' if 'form name' not in fields else fields['form name']
                 )
-                self.userid = login_form.text_input(
+                userid = login_form.text_input(
                     'Username' if 'userid' not in fields else fields['userid']
                 )
-                self.password = login_form.text_input(
+                password = login_form.text_input(
                     'Password' if 'password' not in fields else fields['password'],
                     type='password'
                 )
@@ -176,7 +195,7 @@ class Authenticator:
                 )
 
                 if submitted:
-                    self._check_credentials()
+                    self._check_credentials(userid, password)
 
         return st.session_state['authenticated']
 
@@ -332,5 +351,83 @@ class Authenticator:
 
             registration_complete, msg = self._create_new_user(new_user_data)
             return registration_complete, msg
+
+        return None, ''
+
+    def _validate_form_data(self, data):
+        if '' in data:
+            return False, 'All fields are required'
+        return True, ''
+
+    def reset_password(self, location='main', fields={'form name': 'Reset Password',
+                                                      'current password': 'Current password',
+                                                      'new password': 'New password',
+                                                      'repeat new password': 'Repeat new password',
+                                                      'submit': 'Reset'}):
+        if location not in ['main', 'sidebar']:
+            raise ValueError("Location must be one of 'main' or 'sidebar'") 
+
+        if location == 'main':
+            reset_password_form = st.form('reset-password')
+        elif location == 'sidebar':
+            reset_password_form = st.sidebar.form('reset-password')
+
+        reset_password_form.subheader(
+            'Reset password' if 'form name' not in fields else fields['form name']
+        )
+        password = reset_password_form.text_input(
+            'Current password' if 'current password' not in fields else fields['current password'],
+            type='password'
+        )
+        new_pw = reset_password_form.text_input(
+            'New password' if 'new password' not in fields else fields['new password'],
+            type='password'
+        )
+        repeat_new_pw = reset_password_form.text_input(
+            'Repeat new password' if 'repeat new password' not in fields else fields['repeat new password'],
+            type='password'
+        )
+        submitted = reset_password_form.form_submit_button(
+            'Reset' if 'submit' not in fields else fields['submit']
+        )
+
+        if submitted:
+            form_data = {
+                'current password': password,
+                'new password': new_pw,
+                'repeat new password': repeat_new_pw,
+            }
+            # verificar campos obrigatórios
+            validation_complete, msg = self._validate_form_data([password, new_pw, repeat_new_pw])
+            if not validation_complete:
+                return False, msg
+            
+            # verificar credenciais atuais
+            userid = st.session_state['user']['userid']
+            success = self._check_credentials(
+                userid=userid,
+                password=password,
+                save_state=False
+            )
+            if not success:
+                return False, 'Current password is incorrect'
+
+            # verificar se senha atual e nova são diferentes
+            if password == new_pw:
+                return False, 'Current and new passwords are the same'
+
+            # verificar se nova senha e repeat são iguais
+            if new_pw != repeat_new_pw:
+                return False, 'Passwords do not match'
+
+            # validar nova senha
+            # if len(new_pw) < 8:
+            #     return False, 'Password must be at least 8 characters long'
+
+            # atualizar senha
+            if db_tools.update_password(userid, new_pw):
+                return True, 'Password updated successfully'
+            else:
+                return False, 'Update failed, please try again later'
 
         return None, ''

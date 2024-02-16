@@ -11,7 +11,7 @@ def get_database():
 db = get_database()
 
 
-def get_user(userid: str, fields: dict={'user_col': 'users',
+def get_user(userid: str, fields: dict={'user_coll': 'users',
                                         'id_field': 'email',
                                         'name_field': 'name',
                                         'pw_hash_field': 'hashed_pw'}) -> dict:
@@ -31,7 +31,7 @@ def get_user(userid: str, fields: dict={'user_col': 'users',
         The user information: userid, name, and password hash. Returns None if 
         the user is not found.
     '''
-    doc = db[fields['user_col']].find_one({fields['id_field']: userid})
+    doc = db[fields['user_coll']].find_one({fields['id_field']: userid})
     if doc is not None:
         return {
             'userid': doc.get(fields['id_field']),
@@ -62,3 +62,11 @@ def create_new_user(new_user_data: dict) -> bool:
     }
     result = db['users'].insert_one(new_user)
     return result.acknowledged
+
+
+def update_password(userid, new_password):
+    result = db['users'].find_one_and_update(
+        {'email': userid},
+        {'$set': {'hashed_pw': hash_pw(new_password)}}
+    )
+    return result is not None
