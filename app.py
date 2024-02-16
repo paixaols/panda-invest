@@ -4,7 +4,7 @@ from streamlit_option_menu import option_menu
 # st.set_page_config(page_title='Home', layout='wide')
 
 from stauth import Authenticator
-from views.public import home
+from views import private_views, public_views
 
 # Settings
 # ==============================================================================
@@ -21,17 +21,22 @@ if st.session_state['authenticated']:
         st.write(f'Bem-vindo(a) *{st.session_state["user"]["name"]}*')
         authenticator.logout(button_name='Sair')
         st.divider()
-        selected_page = option_menu(
+        active_page = option_menu(
             menu_title=None,
-            options=['Painel', '---', 'Alterar senha'],
+            options=['Painel', '---', 'Configurações'],
             icons=['columns', '', 'gear'],# https://icons.getbootstrap.com/
             default_index=0,
         )
         st.divider()
 else:
-    selected_page = 'home'
+    active_page = 'home'
 
 # Views
 # ==============================================================================
-if selected_page == 'home':
-    home.create_page(authenticator)
+if active_page == 'Painel':
+    private_views.dashboard.create_page()
+if active_page == 'Configurações':
+    private_views.settings.create_page(authenticator)
+
+if active_page == 'home':
+    public_views.home.create_page(authenticator)
