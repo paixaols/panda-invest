@@ -103,7 +103,7 @@ class Authenticator:
                             }
                             st.session_state['authenticated'] = True
 
-    def _check_credentials(self, userid, password, save_state=True):
+    def _check_credentials(self, userid, password, save_state=True) -> bool:
         '''
         Checks the validity of the entered credentials. If the credentials are 
         valid, authentication status is stored in session state, under the key 
@@ -233,13 +233,13 @@ class Authenticator:
             if st.session_state['authenticated']:
                 self._implement_logout()
 
-    def _validate_registration_data(self, new_user_data: dict) -> tuple:
+    def _validate_form_data(self, data: list) -> tuple:
         '''
-        Perform validation checks on the data.
+        Perform validation checks on form data.
 
         Parameters
         ----------
-        new_user_data: dict
+        data: list
             Data from the registration form.
 
         Returns
@@ -249,12 +249,34 @@ class Authenticator:
         str
             Message explaining validation status.
         '''
-        if '' in new_user_data.values():
+        if '' in data:
             return False, 'All fields are required'
-        if new_user_data['password'] != new_user_data['repeat pw']:
+        return True, ''
+
+    def _validate_password(self, pw: str, repeat_pw: str) -> tuple:
+        '''
+        Perform validation checks on passwords.
+
+        Parameters
+        ----------
+        pw: str
+            Password.
+        repeat_pw: str
+            Repeat password.
+
+        Returns
+        -------
+        bool
+            Boolean indicating the validity of the password.
+        str
+            Message explaining validation status.
+        '''
+        if pw != repeat_pw:
             return False, 'Passwords do not match'
-        # if len(new_user_data['password']) < 8:
+
+        # if len(pw) < 8:
         #     return False, 'Password must be at least 8 characters long'
+
         return True, ''
 
     def _create_new_user(self, new_user_data: dict) -> tuple:
@@ -283,12 +305,12 @@ class Authenticator:
         else:
             return False, 'Registration failed, please try again later'
 
-    def register_user(self, location='main', fields: dict={'form name':'Register',
+    def register_user(self, location: str='main', fields: dict={'form name':'Register',
                                                            'userid':'Username',
                                                            'name': 'Name',
                                                            'password':'Password',
                                                            'repeat password':'Repeat password',
-                                                           'submit':'Register'}) -> bool:
+                                                           'submit':'Register'}) -> tuple:
         '''
         Creates a user registration widget and inserts a new profile in the 
         database.
@@ -345,8 +367,12 @@ class Authenticator:
                 'repeat pw': repeat_pw
             }
 
-            validation_complete, msg = self._validate_registration_data(new_user_data)
-            if not validation_complete:
+            valid_form, msg = self._validate_form_data([userid, name, password, repeat_pw])
+            if not valid_form:
+                return False, msg
+
+            valid_password, msg = self._validate_password(password, repeat_pw)
+            if not valid_password:
                 return False, msg
 
             registration_complete, msg = self._create_new_user(new_user_data)
@@ -354,16 +380,29 @@ class Authenticator:
 
         return None, ''
 
-    def _validate_form_data(self, data):
-        if '' in data:
-            return False, 'All fields are required'
-        return True, ''
+    def reset_password(self, location: str='main', fields: dict={'form name': 'Reset Password',
+                                                                 'current password': 'Current password',
+                                                                 'new password': 'New password',
+                                                                 'repeat new password': 'Repeat new password',
+                                                                 'submit': 'Reset'}) -> tuple:
+        '''
+        Creates a password reset widget.
 
-    def reset_password(self, location='main', fields={'form name': 'Reset Password',
-                                                      'current password': 'Current password',
-                                                      'new password': 'New password',
-                                                      'repeat new password': 'Repeat new password',
-                                                      'submit': 'Reset'}):
+        Parameters
+        ----------
+        location: str
+            The location of the password reset widget i.e. main or sidebar.
+        fields: dict
+            The rendered names of the fields/buttons.
+
+        Returns
+        -------
+        bool
+            The status of resetting the password, None: form not submitted, 
+            False: error during reset, True: reset successful.
+        str
+            Success or error message.
+        '''
         if location not in ['main', 'sidebar']:
             raise ValueError("Location must be one of 'main' or 'sidebar'") 
 
@@ -375,7 +414,7 @@ class Authenticator:
         reset_password_form.subheader(
             'Reset password' if 'form name' not in fields else fields['form name']
         )
-        password = reset_password_form.text_input(
+        current_pw = reset_password_form.text_input(
             'Current password' if 'current password' not in fields else fields['current password'],
             type='password'
         )
@@ -392,39 +431,30 @@ class Authenticator:
         )
 
         if submitted:
-            form_data = {
-                'current password': password,
-                'new password': new_pw,
-                'repeat new password': repeat_new_pw,
-            }
-            # verificar campos obrigatórios
-            validation_complete, msg = self._validate_form_data([password, new_pw, repeat_new_pw])
-            if not validation_complete:
+            # Check required fields
+            valid_form, msg = self._validate_form_data([current_pw, new_pw, repeat_new_pw])
+            if not valid_form:
                 return False, msg
             
-            # verificar credenciais atuais
+            # Check current credentials
             userid = st.session_state['user']['userid']
             success = self._check_credentials(
                 userid=userid,
-                password=password,
+                password=current_pw,
                 save_state=False
             )
             if not success:
                 return False, 'Current password is incorrect'
 
-            # verificar se senha atual e nova são diferentes
-            if password == new_pw:
+            # Check new password
+            if current_pw == new_pw:
                 return False, 'Current and new passwords are the same'
 
-            # verificar se nova senha e repeat são iguais
-            if new_pw != repeat_new_pw:
-                return False, 'Passwords do not match'
+            valid_password, msg = self._validate_password(new_pw, repeat_new_pw)
+            if not valid_password:
+                return False, msg
 
-            # validar nova senha
-            # if len(new_pw) < 8:
-            #     return False, 'Password must be at least 8 characters long'
-
-            # atualizar senha
+            # Update password
             if db_tools.update_password(userid, new_pw):
                 return True, 'Password updated successfully'
             else:
