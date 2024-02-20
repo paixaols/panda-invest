@@ -70,3 +70,8 @@ def update_password(userid, new_password):
         {'$set': {'hashed_pw': hash_pw(new_password)}}
     )
     return result is not None
+
+
+def delete_user(userid):
+    result = db['users'].delete_one({'email': userid})
+    return result.deleted_count > 0

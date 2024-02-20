@@ -461,3 +461,29 @@ class Authenticator:
                 return False, 'Update failed, please try again later'
 
         return None, ''
+
+    def _account_deletion(self):
+        if db_tools.delete_user(st.session_state['user']['userid']):
+            self._implement_logout()
+
+    def delete_account(self, fields: dict={'delete': 'Delete account',
+                                           'confirm': 'I want to delete this account'}):
+        '''
+        Creates a delete account button.
+
+        Parameters
+        ----------
+        fields: dict
+            The rendered names of the buttons.
+        '''
+        col1, col2 = st.columns([1, 3])
+        with col1:
+            exclude_acc = st.button(
+                'Delete account' if 'delete' not in fields else fields['delete']
+            )
+        if exclude_acc:
+            with col2:
+                st.button(
+                    'I want to delete this account' if 'confirm' not in fields else fields['confirm'],
+                    type='primary', on_click=self._account_deletion
+                )
