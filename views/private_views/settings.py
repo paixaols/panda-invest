@@ -5,7 +5,16 @@ def create_page(authenticator):
     tab1, tab2 = st.tabs(['Conta', 'Senha'])
 
     with tab1:
-        st.subheader('Alterar dados')
+        authenticator.update_user_details(
+            user_details={'name': 'Nome'},
+            fields = {
+                'form name': 'Atualizar dados',
+                'userid': 'E-mail',
+                'field': 'Campo',
+                'new_value': 'Valor',
+                'submit': 'Atualizar'
+            }
+        )
 
         st.divider()
 

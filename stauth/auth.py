@@ -487,3 +487,33 @@ class Authenticator:
                     'I want to delete this account' if 'confirm' not in fields else fields['confirm'],
                     type='primary', on_click=self._account_deletion
                 )
+
+    def update_user_details(self, user_details: dict={'name': 'Name'}, fields: dict={'form name': 'Update user details',
+                                                                                     'userid': 'Username',
+                                                                                     'field': 'Field',
+                                                                                     'new_value': 'New value',
+                                                                                     'submit': 'Update'}):
+        update_user_details_form = st.form('update-user-details')
+        update_user_details_form.subheader(
+            'Update user details' if 'form name' not in fields else fields['form name']
+        )
+        update_user_details_form.text_input(
+            'Username' if 'userid' not in fields else fields['userid'],
+            placeholder=st.session_state['user'].get('userid'),
+            disabled=True
+        )
+        user_detail_fields = list(user_details.values())
+        field = update_user_details_form.selectbox(
+            'Field' if 'field' not in fields else fields['field'],
+            user_detail_fields
+        )
+        new_value = update_user_details_form.text_input(
+            'New value' if 'new_value' not in fields else fields['new_value'],
+            placeholder=st.session_state['user'].get('name')
+        )
+        submitted = update_user_details_form.form_submit_button(
+            'Update' if 'submit' not in fields else fields['submit']
+        )
+
+        if submitted:
+            pass
