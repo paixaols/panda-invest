@@ -170,7 +170,7 @@ class Authenticator:
             False: incorrect credentials, True: correct credentials.
         '''
         if location not in ['main', 'sidebar']:
-            raise ValueError("Location must be one of 'main' or 'sidebar'") 
+            raise ValueError("Location must be one of 'main' or 'sidebar'")
 
         if not st.session_state['authenticated']:
             self._check_cookie()
@@ -250,7 +250,7 @@ class Authenticator:
             Message explaining validation status.
         '''
         if '' in data:
-            return False, 'All fields are required'
+            return False, 'fields with an asterisk are required'
         return True, ''
 
     def _validate_password(self, pw: str, repeat_pw: str) -> tuple:
@@ -306,10 +306,10 @@ class Authenticator:
             return False, 'Registration failed, please try again later'
 
     def register_user(self, location: str='main', fields: dict={'form name':'Register',
-                                                           'userid':'Username',
-                                                           'name': 'Name',
-                                                           'password':'Password',
-                                                           'repeat password':'Repeat password',
+                                                           'userid':'Username*',
+                                                           'name': 'Name*',
+                                                           'password':'Password*',
+                                                           'repeat password':'Repeat password*',
                                                            'submit':'Register'}) -> tuple:
         '''
         Creates a user registration widget and inserts a new profile in the 
@@ -331,7 +331,7 @@ class Authenticator:
             Success or error message.
         '''
         if location not in ['main', 'sidebar']:
-            raise ValueError("Location must be one of 'main' or 'sidebar'") 
+            raise ValueError("Location must be one of 'main' or 'sidebar'")
 
         if location == 'main':
             register_user_form = st.form('register-user')
@@ -342,17 +342,17 @@ class Authenticator:
             'Register' if 'form name' not in fields else fields['form name']
         )
         userid = register_user_form.text_input(
-            'Username' if 'userid' not in fields else fields['userid']
+            'Username*' if 'userid' not in fields else fields['userid']+'*'
         )
         name = register_user_form.text_input(
-            'Name' if 'name' not in fields else fields['name']
+            'Name*' if 'name' not in fields else fields['name']+'*'
         )
         password = register_user_form.text_input(
-            'Password' if 'password' not in fields else fields['password'],
+            'Password*' if 'password' not in fields else fields['password']+'*',
             type='password'
         )
         repeat_pw = register_user_form.text_input(
-            'Repeat password' if 'repeat password' not in fields else fields['repeat password'],
+            'Repeat password*' if 'repeat password' not in fields else fields['repeat password']+'*',
             type='password'
         )
         submitted = register_user_form.form_submit_button(
@@ -381,9 +381,9 @@ class Authenticator:
         return None, ''
 
     def reset_password(self, location: str='main', fields: dict={'form name': 'Reset Password',
-                                                                 'current password': 'Current password',
-                                                                 'new password': 'New password',
-                                                                 'repeat new password': 'Repeat new password',
+                                                                 'current password': 'Current password*',
+                                                                 'new password': 'New password*',
+                                                                 'repeat new password': 'Repeat new password*',
                                                                  'submit': 'Reset'}) -> tuple:
         '''
         Creates a password reset widget.
@@ -404,7 +404,7 @@ class Authenticator:
             Success or error message.
         '''
         if location not in ['main', 'sidebar']:
-            raise ValueError("Location must be one of 'main' or 'sidebar'") 
+            raise ValueError("Location must be one of 'main' or 'sidebar'")
 
         if location == 'main':
             reset_password_form = st.form('reset-password')
@@ -415,15 +415,15 @@ class Authenticator:
             'Reset password' if 'form name' not in fields else fields['form name']
         )
         current_pw = reset_password_form.text_input(
-            'Current password' if 'current password' not in fields else fields['current password'],
+            'Current password*' if 'current password' not in fields else fields['current password']+'*',
             type='password'
         )
         new_pw = reset_password_form.text_input(
-            'New password' if 'new password' not in fields else fields['new password'],
+            'New password*' if 'new password' not in fields else fields['new password']+'*',
             type='password'
         )
         repeat_new_pw = reset_password_form.text_input(
-            'Repeat new password' if 'repeat new password' not in fields else fields['repeat new password'],
+            'Repeat new password*' if 'repeat new password' not in fields else fields['repeat new password']+'*',
             type='password'
         )
         submitted = reset_password_form.form_submit_button(
@@ -488,11 +488,30 @@ class Authenticator:
                     type='primary', on_click=self._account_deletion
                 )
 
-    def update_user_details(self, user_details: dict={'name': 'Name'}, fields: dict={'form name': 'Update user details',
+    def update_user_details(self, user_details: dict={'Name': 'name'}, fields: dict={'form name': 'Update user details',
                                                                                      'userid': 'Username',
                                                                                      'field': 'Field',
-                                                                                     'new_value': 'New value',
-                                                                                     'submit': 'Update'}):
+                                                                                     'new_value': 'New value*',
+                                                                                     'submit': 'Update'}) -> tuple:
+        '''
+        Creates an update user details widget.
+
+        Parameters
+        ----------
+        user_details: dict
+            Updatable user details. Keys: human readable names; values: database
+            names.
+        fields: dict
+            The rendered names of the fields/buttons.
+
+        Returns
+        -------
+        bool
+            The status of details updating, None: form not submitted, 
+            False: error during update, True: update successful.
+        str
+            Success or error message.
+        '''
         update_user_details_form = st.form('update-user-details')
         update_user_details_form.subheader(
             'Update user details' if 'form name' not in fields else fields['form name']
@@ -502,13 +521,13 @@ class Authenticator:
             placeholder=st.session_state['user'].get('userid'),
             disabled=True
         )
-        user_detail_fields = list(user_details.values())
-        field = update_user_details_form.selectbox(
+        user_detail_fields = list(user_details.keys())
+        field_readable_name = update_user_details_form.selectbox(
             'Field' if 'field' not in fields else fields['field'],
             user_detail_fields
         )
         new_value = update_user_details_form.text_input(
-            'New value' if 'new_value' not in fields else fields['new_value'],
+            'New value*' if 'new_value' not in fields else fields['new_value']+'*',
             placeholder=st.session_state['user'].get('name')
         )
         submitted = update_user_details_form.form_submit_button(
@@ -516,4 +535,20 @@ class Authenticator:
         )
 
         if submitted:
-            pass
+            user = st.session_state['user']
+
+            field_name = user_details[field_readable_name]
+            if field_name not in user:
+                return False, f'Could not recognize field: {field_name}'
+
+            valid_form, msg = self._validate_form_data([new_value])
+            if not valid_form:
+                return False, msg
+
+            if db_tools.update_user_info(user['userid'], field_name, new_value):
+                st.session_state['user'][field_name] = new_value
+                return True, 'Data updated successfully'
+            else:
+                return False, 'Update failed, please try again later'
+
+        return None, ''

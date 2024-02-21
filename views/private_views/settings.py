@@ -5,8 +5,8 @@ def create_page(authenticator):
     tab1, tab2 = st.tabs(['Conta', 'Senha'])
 
     with tab1:
-        authenticator.update_user_details(
-            user_details={'name': 'Nome'},
+        success, msg = authenticator.update_user_details(
+            user_details={'Nome': 'name'},
             fields = {
                 'form name': 'Atualizar dados',
                 'userid': 'E-mail',
@@ -15,6 +15,11 @@ def create_page(authenticator):
                 'submit': 'Atualizar'
             }
         )
+        if success:
+            st.success(msg, icon='✔️')
+        else:
+            if success is not None:
+                st.error(msg, icon='❌')
 
         st.divider()
 

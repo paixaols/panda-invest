@@ -72,6 +72,14 @@ def update_password(userid, new_password):
     return result is not None
 
 
+def update_user_info(userid, field, value):
+    result = db['users'].find_one_and_update(
+        {'email': userid},
+        {'$set': {field: value}}
+    )
+    return result is not None
+
+
 def delete_user(userid):
     result = db['users'].delete_one({'email': userid})
     return result.deleted_count > 0
