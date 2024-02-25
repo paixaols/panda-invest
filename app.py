@@ -6,6 +6,15 @@ from streamlit_option_menu import option_menu
 from stauth import Authenticator
 from views import private_views, public_views
 
+
+def set_param(key):
+    st.query_params[key] = st.session_state.get(key)
+
+
+def get_param(key):
+    return st.query_params.get(key)
+
+
 # Settings
 # ==============================================================================
 authenticator = Authenticator(
@@ -16,20 +25,32 @@ authenticator = Authenticator(
 
 # Main app
 # ==============================================================================
+private_pages = ['Painel', '---', 'Configurações']
+public_pages = ['Home']
+
 if st.session_state['authenticated']:
+    try:
+        page_index = private_pages.index(get_param('p'))
+    except ValueError:
+        st.session_state['p'] = None
+        st.query_params.clear()
+        page_index = 0
+
     with st.sidebar:
         st.write(f'Bem-vindo(a) *{st.session_state["user"]["name"]}*')
         authenticator.logout(button_name='Sair')
         st.divider()
         active_page = option_menu(
             menu_title=None,
-            options=['Painel', '---', 'Configurações'],
-            icons=['columns', '', 'gear'],# https://icons.getbootstrap.com/
-            default_index=0,
+            options=private_pages,
+            icons=['columns', '', 'gear'],
+            default_index=page_index,
+            on_change=set_param,
+            key='p'
         )
         st.divider()
 else:
-    active_page = 'home'
+    active_page = 'Home'
 
 # Views
 # ==============================================================================
@@ -38,5 +59,5 @@ if active_page == 'Painel':
 if active_page == 'Configurações':
     private_views.settings.create_page(authenticator)
 
-if active_page == 'home':
+if active_page == 'Home':
     public_views.home.create_page(authenticator)

@@ -33,6 +33,8 @@ class Authenticator:
         self.cookie_expiry_days = cookie_expiry_days
         self.cookie_manager = stx.CookieManager()
 
+        self._check_cookie()
+
         if 'authenticated' not in st.session_state:
             st.session_state['authenticated'] = None
         if 'failed_login_attempts' not in st.session_state:
@@ -172,30 +174,28 @@ class Authenticator:
         if location not in ['main', 'sidebar']:
             raise ValueError("Location must be one of 'main' or 'sidebar'")
 
-        if not st.session_state['authenticated']:
-            self._check_cookie()
-            if not st.session_state['authenticated']:
-                if location == 'main':
-                    login_form = st.form('login')
-                elif location == 'sidebar':
-                    login_form = st.sidebar.form('login')
+        if location == 'main':
+            login_form = st.form('login')
+        elif location == 'sidebar':
+            login_form = st.sidebar.form('login')
 
-                login_form.subheader(
-                    'Login' if 'form name' not in fields else fields['form name']
-                )
-                userid = login_form.text_input(
-                    'Username' if 'userid' not in fields else fields['userid']
-                )
-                password = login_form.text_input(
-                    'Password' if 'password' not in fields else fields['password'],
-                    type='password'
-                )
-                submitted = login_form.form_submit_button(
-                    'Login' if 'submit' not in fields else fields['submit']
-                )
+        login_form.subheader(
+            'Login' if 'form name' not in fields else fields['form name']
+        )
+        userid = login_form.text_input(
+            'Username' if 'userid' not in fields else fields['userid']
+        )
+        password = login_form.text_input(
+            'Password' if 'password' not in fields else fields['password'],
+            type='password'
+        )
+        submitted = login_form.form_submit_button(
+            'Login' if 'submit' not in fields else fields['submit']
+        )
 
-                if submitted:
-                    self._check_credentials(userid, password)
+        if submitted:
+            if self._check_credentials(userid, password):
+                st.query_params.clear()
 
         return st.session_state['authenticated']
 
@@ -207,6 +207,7 @@ class Authenticator:
         st.session_state['authenticated'] = None
         st.session_state['logout'] = True
         st.session_state['user'] = {}
+        st.query_params.clear()
 
     def logout(self, button_name: str='Logout', location: str='main', key: str=None):
         '''
