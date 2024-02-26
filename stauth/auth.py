@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 
 from . import mongodb_tools as db_tools
 from .hash import check_pw
+from .validator import Validator
 
 
 class Authenticator:
@@ -13,7 +14,7 @@ class Authenticator:
     This class manages user authentication and creates register user, login, 
     logout, and reset password widgets.
     '''
-    def __init__(self, cookie_name: str, key: str, cookie_expiry_days: float=1.0):
+    def __init__(self, cookie_name: str, key: str, cookie_expiry_days: float=1.0, user_id_type: str='username'):
         '''
         Instanciate the Authenticate object.
 
@@ -28,10 +29,15 @@ class Authenticator:
             The number of days before the reauthentication cookie automatically 
             expires on the client's browser.
         '''
+        if user_id_type not in ['username', 'email']:
+            raise ValueError("user_id_type must be one of 'username' or 'email'")
+
+        self.user_id_type = user_id_type
         self.cookie_name = cookie_name
         self.key = key
         self.cookie_expiry_days = cookie_expiry_days
         self.cookie_manager = stx.CookieManager()
+        self.validator = Validator()
 
         self._check_cookie()
 
@@ -234,14 +240,14 @@ class Authenticator:
             if st.session_state['authenticated']:
                 self._implement_logout()
 
-    def _validate_form_data(self, data: list) -> tuple:
+    def _validate_form_data(self, form_data: dict) -> tuple:
         '''
         Perform validation checks on form data.
 
         Parameters
         ----------
-        data: list
-            Data from the registration form.
+        form_data: dict
+            Data to validate.
 
         Returns
         -------
@@ -250,33 +256,32 @@ class Authenticator:
         str
             Message explaining validation status.
         '''
-        if '' in data:
-            return False, 'fields with an asterisk are required'
-        return True, ''
+        if '' in form_data.values():
+            return False, 'Fields with an asterisk are required'
 
-    def _validate_password(self, pw: str, repeat_pw: str) -> tuple:
-        '''
-        Perform validation checks on passwords.
+        if 'required' in form_data:
+            if '' in form_data['required']:
+                return False, 'Fields with an asterisk are required'
 
-        Parameters
-        ----------
-        pw: str
-            Password.
-        repeat_pw: str
-            Repeat password.
+        if 'email' in form_data:
+            if not self.validator.validate_email(form_data['email']):
+                return False, 'Invalid e-mail'
 
-        Returns
-        -------
-        bool
-            Boolean indicating the validity of the password.
-        str
-            Message explaining validation status.
-        '''
-        if pw != repeat_pw:
-            return False, 'Passwords do not match'
+        if 'username' in form_data:
+            if not self.validator.validate_username(form_data['username']):
+                return False, 'Invalid username'
 
-        # if len(pw) < 8:
-        #     return False, 'Password must be at least 8 characters long'
+        if 'name' in form_data:
+            if not self.validator.validate_username(form_data['name']):
+                return False, 'Invalid name'
+
+        if 'password' in form_data and 'repeat_password' in form_data:
+            if form_data['password'] != form_data['repeat_password']:
+                return False, 'Passwords do not match'
+
+        if 'password' in form_data:
+            if not self.validator.validate_password(form_data['password']):
+                return False, 'Password must be at least 8 characters long'
 
         return True, ''
 
@@ -361,22 +366,21 @@ class Authenticator:
         )
 
         if submitted:
-            new_user_data = {
+            valid_form, msg = self._validate_form_data({
+                self.user_id_type: userid,
+                'name': name,
+                'password': password,
+                'repeat_password': repeat_pw
+            })
+            if not valid_form:
+                return False, msg
+
+            registration_complete, msg = self._create_new_user({
                 'userid': userid,
                 'name': name,
                 'password': password,
                 'repeat pw': repeat_pw
-            }
-
-            valid_form, msg = self._validate_form_data([userid, name, password, repeat_pw])
-            if not valid_form:
-                return False, msg
-
-            valid_password, msg = self._validate_password(password, repeat_pw)
-            if not valid_password:
-                return False, msg
-
-            registration_complete, msg = self._create_new_user(new_user_data)
+            })
             return registration_complete, msg
 
         return None, ''
@@ -433,7 +437,11 @@ class Authenticator:
 
         if submitted:
             # Check required fields
-            valid_form, msg = self._validate_form_data([current_pw, new_pw, repeat_new_pw])
+            valid_form, msg = self._validate_form_data({
+                'required': [current_pw, new_pw, repeat_new_pw],
+                'password': new_pw,
+                'repeat_password': repeat_new_pw
+            })
             if not valid_form:
                 return False, msg
             
@@ -450,10 +458,6 @@ class Authenticator:
             # Check new password
             if current_pw == new_pw:
                 return False, 'Current and new passwords are the same'
-
-            valid_password, msg = self._validate_password(new_pw, repeat_new_pw)
-            if not valid_password:
-                return False, msg
 
             # Update password
             if db_tools.update_password(userid, new_pw):
@@ -542,9 +546,12 @@ class Authenticator:
             if field_name not in user:
                 return False, f'Could not recognize field: {field_name}'
 
-            valid_form, msg = self._validate_form_data([new_value])
+            valid_form, msg = self._validate_form_data({field_name: new_value})
             if not valid_form:
                 return False, msg
+
+            if user[field_name] == new_value:
+                return False, 'Current and new value are the same'
 
             if db_tools.update_user_info(user['userid'], field_name, new_value):
                 st.session_state['user'][field_name] = new_value

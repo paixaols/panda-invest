@@ -20,7 +20,8 @@ def get_param(key):
 authenticator = Authenticator(
     cookie_name = 'some_cookie_name',
     key = 'some_signature_key',
-    cookie_expiry_days = 1
+    cookie_expiry_days = 1,
+    user_id_type='email'
 )
 
 # Main app
