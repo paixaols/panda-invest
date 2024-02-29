@@ -22,7 +22,8 @@ def create_page(authenticator):
             fields={
                 'form name':'Cadastro',
                 'userid':'E-mail',
-                'name': 'Nome',
+                'first name': 'Nome',
+                'last name': 'Sobrenome',
                 'password':'Senha',
                 'repeat password': 'Repetir senha',
                 'submit':'Cadastrar-se'

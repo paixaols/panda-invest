@@ -1,5 +1,7 @@
 import streamlit as st
 
+from datetime import datetime
+
 from .hash import hash_pw
 from db import mongodb_engine as engine
 
@@ -28,17 +30,10 @@ def get_user(userid: str, fields: dict={'user_coll': 'users',
     Returns
     -------
     dict
-        The user information: userid, name, and password hash. Returns None if 
-        the user is not found.
+        The user information or None if the user is not found.
     '''
     doc = db[fields['user_coll']].find_one({fields['id_field']: userid})
-    if doc is not None:
-        return {
-            'userid': doc.get(fields['id_field']),
-            'name': doc.get(fields['name_field']),
-            'hash': doc.get(fields['pw_hash_field'])
-        }
-    return None
+    return doc
 
 
 def create_new_user(new_user_data: dict) -> bool:
@@ -55,10 +50,14 @@ def create_new_user(new_user_data: dict) -> bool:
     bool
         Acknowledgement of the insertion operation.
     '''
+    id_field_name = new_user_data['id_type']
     new_user = {
-        'email': new_user_data['userid'],
-        'name': new_user_data['name'],
-        'hashed_pw': hash_pw(new_user_data['password'])
+        id_field_name: new_user_data['userid'],
+        'first_name': new_user_data['first_name'],
+        'last_name': new_user_data['last_name'],
+        'hashed_pw': hash_pw(new_user_data['password']),
+        'date_joined': datetime.now(),
+        'active': True
     }
     result = db['users'].insert_one(new_user)
     return result.acknowledged

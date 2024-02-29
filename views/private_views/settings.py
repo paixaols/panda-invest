@@ -6,12 +6,15 @@ def create_page(authenticator):
 
     with tab1:
         success, msg = authenticator.update_user_details(
-            user_details={'Nome': 'name'},
+            user_details={
+                'Nome': 'first_name',
+                'Sobrenome': 'last_name'
+            },
             fields = {
                 'form name': 'Atualizar dados',
                 'userid': 'E-mail',
                 'field': 'Campo',
-                'new_value': 'Valor',
+                'new_value': 'Novo valor',
                 'submit': 'Atualizar'
             }
         )

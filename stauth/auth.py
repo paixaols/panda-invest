@@ -61,8 +61,9 @@ class Authenticator:
         '''
         return jwt.encode(
             {
-                'user_id': st.session_state['user']['userid'],
-                'user_name': st.session_state['user']['name'],
+                'userid': st.session_state['user']['userid'],
+                'first_name': st.session_state['user']['first_name'],
+                'last_name': st.session_state['user']['last_name'],
                 'exp_date': self.exp_date
             },
             self.key,
@@ -104,10 +105,11 @@ class Authenticator:
             if self.token is not False:
                 if not st.session_state['logout']:
                     if self.token['exp_date'] > datetime.utcnow().timestamp():
-                        if 'user_id' in self.token:
+                        if 'userid' in self.token:
                             st.session_state['user'] = {
-                                'userid': self.token['user_id'],
-                                'name': self.token['user_name']
+                                'userid': self.token['userid'],
+                                'first_name': self.token['first_name'],
+                                'last_name': self.token['last_name']
                             }
                             st.session_state['authenticated'] = True
 
@@ -135,13 +137,14 @@ class Authenticator:
         '''
         # Retrieve data from database
         user = db_tools.get_user(userid)
-        if user is not None and check_pw(password, user['hash']):
+        if user is not None and check_pw(password, user['hashed_pw']):
             if save_state:
                 # Session state
                 st.session_state['authenticated'] = True
                 st.session_state['user'] = {
-                    'userid': user['userid'],
-                    'name': user['name']
+                    'userid': user[self.user_id_type],
+                    'first_name': user['first_name'],
+                    'last_name': user['last_name']
                 }
                 # Cookie
                 self.exp_date = self._set_exp_date()
@@ -256,9 +259,6 @@ class Authenticator:
         str
             Message explaining validation status.
         '''
-        if '' in form_data.values():
-            return False, 'Fields with an asterisk are required'
-
         if 'required' in form_data:
             if '' in form_data['required']:
                 return False, 'Fields with an asterisk are required'
@@ -272,8 +272,12 @@ class Authenticator:
                 return False, 'Invalid username'
 
         if 'name' in form_data:
-            if not self.validator.validate_username(form_data['name']):
-                return False, 'Invalid name'
+            if isinstance(form_data['name'], list):
+                if not all([ self.validator.validate_name(name) for name in form_data['name'] ]):
+                    return False, 'Invalid name'
+            else:
+                if not self.validator.validate_name(form_data['name']):
+                    return False, 'Invalid name'
 
         if 'password' in form_data and 'repeat_password' in form_data:
             if form_data['password'] != form_data['repeat_password']:
@@ -313,7 +317,8 @@ class Authenticator:
 
     def register_user(self, location: str='main', fields: dict={'form name':'Register',
                                                            'userid':'Username*',
-                                                           'name': 'Name*',
+                                                           'first name': 'First ame*',
+                                                           'last name': 'Last name*',
                                                            'password':'Password*',
                                                            'repeat password':'Repeat password*',
                                                            'submit':'Register'}) -> tuple:
@@ -350,8 +355,11 @@ class Authenticator:
         userid = register_user_form.text_input(
             'Username*' if 'userid' not in fields else fields['userid']+'*'
         )
-        name = register_user_form.text_input(
-            'Name*' if 'name' not in fields else fields['name']+'*'
+        first_name = register_user_form.text_input(
+            'First name*' if 'first name' not in fields else fields['first name']+'*'
+        )
+        last_name = register_user_form.text_input(
+            'Last name*' if 'last name' not in fields else fields['last name']+'*'
         )
         password = register_user_form.text_input(
             'Password*' if 'password' not in fields else fields['password']+'*',
@@ -367,8 +375,9 @@ class Authenticator:
 
         if submitted:
             valid_form, msg = self._validate_form_data({
+                'required': [userid, first_name, last_name, password, repeat_pw],
                 self.user_id_type: userid,
-                'name': name,
+                'name': [first_name, last_name],
                 'password': password,
                 'repeat_password': repeat_pw
             })
@@ -376,10 +385,11 @@ class Authenticator:
                 return False, msg
 
             registration_complete, msg = self._create_new_user({
+                'id_type': self.user_id_type,
                 'userid': userid,
-                'name': name,
-                'password': password,
-                'repeat pw': repeat_pw
+                'first_name': first_name,
+                'last_name': last_name,
+                'password': password
             })
             return registration_complete, msg
 
@@ -526,27 +536,26 @@ class Authenticator:
             placeholder=st.session_state['user'].get('userid'),
             disabled=True
         )
-        user_detail_fields = list(user_details.keys())
-        field_readable_name = update_user_details_form.selectbox(
+        user = st.session_state['user']
+        user_detail_fields = [ f'{k}: {user.get(v)}' for k, v in user_details.items() ]
+        selected_option = update_user_details_form.selectbox(
             'Field' if 'field' not in fields else fields['field'],
             user_detail_fields
         )
         new_value = update_user_details_form.text_input(
-            'New value*' if 'new_value' not in fields else fields['new_value']+'*',
-            placeholder=st.session_state['user'].get('name')
+            'New value*' if 'new_value' not in fields else fields['new_value']+'*'
         )
         submitted = update_user_details_form.form_submit_button(
             'Update' if 'submit' not in fields else fields['submit']
         )
 
         if submitted:
-            user = st.session_state['user']
-
-            field_name = user_details[field_readable_name]
+            field_readable_name = selected_option.split(':')[0]
+            field_name = user_details.get(field_readable_name)
             if field_name not in user:
                 return False, f'Could not recognize field: {field_name}'
 
-            valid_form, msg = self._validate_form_data({field_name: new_value})
+            valid_form, msg = self._validate_form_data({'name': new_value})
             if not valid_form:
                 return False, msg
 

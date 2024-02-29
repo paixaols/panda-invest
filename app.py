@@ -38,7 +38,7 @@ if st.session_state['authenticated']:
         page_index = 0
 
     with st.sidebar:
-        st.write(f'Bem-vindo(a) *{st.session_state["user"]["name"]}*')
+        st.write(f'Bem-vindo(a) *{st.session_state["user"]["first_name"]}*')
         authenticator.logout(button_name='Sair')
         st.divider()
         active_page = option_menu(
