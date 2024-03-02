@@ -113,6 +113,18 @@ class Authenticator:
                             }
                             st.session_state['authenticated'] = True
 
+    def _set_cookie(self):
+        '''
+        Saves authentication cookie.
+        '''
+        self.exp_date = self._set_exp_date()
+        self.token = self._token_encode()
+        self.cookie_manager.set(
+            self.cookie_name,
+            self.token,
+            expires_at=datetime.now() + timedelta(days=self.cookie_expiry_days)
+        )
+
     def _check_credentials(self, userid, password, save_state=True) -> bool:
         '''
         Checks the validity of the entered credentials. If the credentials are 
@@ -147,13 +159,7 @@ class Authenticator:
                     'last_name': user['last_name']
                 }
                 # Cookie
-                self.exp_date = self._set_exp_date()
-                self.token = self._token_encode()
-                self.cookie_manager.set(
-                    self.cookie_name,
-                    self.token,
-                    expires_at=datetime.now() + timedelta(days=self.cookie_expiry_days)
-                )
+                self._set_cookie()
             return True
         else:
             if save_state:
@@ -564,6 +570,7 @@ class Authenticator:
 
             if db_tools.update_user_info(user['userid'], field_name, new_value):
                 st.session_state['user'][field_name] = new_value
+                self._set_cookie()
                 return True, 'Data updated successfully'
             else:
                 return False, 'Update failed, please try again later'
