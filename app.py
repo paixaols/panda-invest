@@ -18,9 +18,9 @@ def get_param(key):
 # Settings
 # ==============================================================================
 authenticator = Authenticator(
-    cookie_name = 'some_cookie_name',
-    key = 'some_signature_key',
-    cookie_expiry_days = 1,
+    cookie_name=st.secrets['COOKIE']['NAME'],
+    key=st.secrets['COOKIE']['SIGNATURE_KEY'],
+    cookie_expiry_days=1,
     user_id_type='email'
 )
 
