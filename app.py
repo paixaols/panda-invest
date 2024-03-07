@@ -26,7 +26,7 @@ authenticator = Authenticator(
 
 # Main app
 # ==============================================================================
-private_pages = ['Painel', '---', 'Configurações']
+private_pages = ['Painel', 'Dividendos', '---', 'Configurações']
 public_pages = ['Home']
 
 if st.session_state['authenticated']:
@@ -44,7 +44,7 @@ if st.session_state['authenticated']:
         active_page = option_menu(
             menu_title=None,
             options=private_pages,
-            icons=['columns', '', 'gear'],
+            icons=['columns', 'coin', '', 'gear'],
             default_index=page_index,
             on_change=set_param,
             key='p'
@@ -57,6 +57,8 @@ else:
 # ==============================================================================
 if active_page == 'Painel':
     private_views.dashboard.create_page()
+if active_page == 'Dividendos':
+    private_views.dividend.create_page()
 if active_page == 'Configurações':
     private_views.settings.create_page(authenticator)
 
