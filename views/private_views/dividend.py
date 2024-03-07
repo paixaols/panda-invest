@@ -1,10 +1,11 @@
+import datetime as dt
 import streamlit as st
 
-import controllers as c
+import controllers as ctr
 
 
 def create_page():
-    data = c.mock.dividends()
+    data = ctr.mock.dividends()
 
     tab1, tab2, tab3 = st.tabs(['Histórico', 'Mês', 'Novo'])
 
@@ -15,17 +16,31 @@ def create_page():
         if data.shape[0] == 0:
             st.warning('Nada encontrado. Insira seus dividendos na aba *Novo*.', icon='⚠️')
         else:
-            grouped_data = data[['local', 'mês', 'valor']].groupby(['local', 'mês']).sum().reset_index()
-            grouped_data = grouped_data.pivot(columns='local', index='mês', values='valor')
-            st.bar_chart(grouped_data)
+            col1, col2, col3 = st.columns([1, 3, 1])
+            time_span = col1.radio('Período', ['1A', '6M'])
+            country = col3.radio('Local', sorted(data['local'].unique()))
+
+            if time_span == '6M':
+                days = 182
+            elif time_span == '1A':
+                days = 365
+            cutoff = dt.date.today()-dt.timedelta(days=days)
+            filtered_data = data.loc[
+                (data['data'] > cutoff) & (data['local'] == country)
+            ]
+            grouped_filtered_data = filtered_data[['mês', 'valor']].groupby('mês').sum()
+            col2.bar_chart(grouped_filtered_data, color='#cd332e')
 
     # Tab month
     with tab2:
         st.subheader('Pagamentos do mês')
 
-        options = data['mês'].unique()
+        options = sorted(data['mês'].unique(), reverse=True)
         option = st.selectbox('Mês', options)
-        filtered_data = data[data['mês'] == option]
+        filtered_data = data.loc[
+            data['mês'] == option,
+            ['data', 'ativo', 'valor', 'local']
+        ]
         st.write(filtered_data)
 
     # Tab new
