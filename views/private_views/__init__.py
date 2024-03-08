@@ -1,1 +1,1 @@
-from . import dashboard, dividend, settings
+from . import cash, dashboard, dividend, settings
