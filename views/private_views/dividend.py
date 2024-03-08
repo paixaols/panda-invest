@@ -35,12 +35,26 @@ def create_page():
     with tab2:
         st.subheader('Pagamentos do mês')
 
-        options = sorted(data['mês'].unique(), reverse=True)
-        option = st.selectbox('Mês', options)
-        filtered_data = data.loc[
-            data['mês'] == option,
+        # Filters
+        col1, col2 = st.columns(2)
+        month = col1.selectbox('Mês', sorted(data['mês'].unique(), reverse=True))
+
+        filtered_data = data.loc[data['mês'] == month]
+
+        country_options = sorted(filtered_data['local'].unique())
+        countries = col2.multiselect(
+            'Local',
+            country_options,
+            default=country_options,
+            placeholder='Selecione uma opção'
+        )
+
+        # Filtered data & table
+        filtered_data = filtered_data.loc[
+            data['local'].isin(countries),
             ['data', 'ativo', 'valor', 'local']
         ]
+
         st.write(filtered_data)
 
     # Tab new
