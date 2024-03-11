@@ -150,6 +150,10 @@ class Authenticator:
         # Retrieve data from database
         user = db_tools.get_user(userid)
         if user is not None and check_pw(password, user['hashed_pw']):
+            if not user.get('active'):
+                if save_state:
+                    st.session_state['user'] = {'active': False}
+                return False
             if save_state:
                 # Session state
                 st.session_state['authenticated'] = True

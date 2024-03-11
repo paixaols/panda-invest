@@ -13,8 +13,11 @@ def create_page(authenticator):
                 'submit':'Entrar'
             }
         )
-        if  st.session_state["authenticated"] is False:
+        if  st.session_state['authenticated'] is False:
             st.error('E-mail e/ou senha incorretos', icon='❌')
+        if st.session_state['authenticated'] is None:
+            if st.session_state['user'].get('active') is False:
+                st.error('Conta bloqueada', icon='❌')
 
     # Register user form
     with col2:
