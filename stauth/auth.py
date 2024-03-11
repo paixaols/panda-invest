@@ -64,6 +64,8 @@ class Authenticator:
                 'userid': st.session_state['user']['userid'],
                 'first_name': st.session_state['user']['first_name'],
                 'last_name': st.session_state['user']['last_name'],
+                'active': st.session_state['user']['active'],
+                'role': st.session_state['user']['role'],
                 'exp_date': self.exp_date
             },
             self.key,
@@ -109,7 +111,9 @@ class Authenticator:
                             st.session_state['user'] = {
                                 'userid': self.token['userid'],
                                 'first_name': self.token['first_name'],
-                                'last_name': self.token['last_name']
+                                'last_name': self.token['last_name'],
+                                'active': self.token['active'],
+                                'role': self.token['role']
                             }
                             st.session_state['authenticated'] = True
 
@@ -160,7 +164,9 @@ class Authenticator:
                 st.session_state['user'] = {
                     'userid': user[self.user_id_type],
                     'first_name': user['first_name'],
-                    'last_name': user['last_name']
+                    'last_name': user['last_name'],
+                    'active': user['active'],
+                    'role': user['role']
                 }
                 # Cookie
                 self._set_cookie()

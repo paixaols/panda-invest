@@ -57,7 +57,8 @@ def create_new_user(new_user_data: dict) -> bool:
         'last_name': new_user_data['last_name'],
         'hashed_pw': hash_pw(new_user_data['password']),
         'date_joined': datetime.now(),
-        'active': True
+        'active': False,
+        'role': 'user'
     }
     result = db['users'].insert_one(new_user)
     return result.acknowledged
