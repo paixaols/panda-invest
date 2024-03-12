@@ -26,13 +26,14 @@ authenticator = Authenticator(
 
 # Main app
 # ==============================================================================
-private_pages = [
-    ('Painel', 'columns'), ('Caixa', 'cash-stack'), ('Dividendos', 'coin'), 
-    ('---', ''), ('Configurações', 'gear')
-]
-public_pages = ['Home']
-
 if st.session_state['authenticated']:
+    private_pages = [
+        # ('Painel', 'columns'), ('Caixa', 'cash-stack'), 
+        ('Dividendos', 'coin'), 
+        ('---', ''), ('Configurações', 'gear')
+    ]
+    if st.session_state['user']['role'] == 'super-admin':
+        private_pages.append(('Usuários', 'people'))
     page_names = [ p[0] for p in private_pages ]
     page_icons = [ p[1] for p in private_pages ]
     try:
@@ -58,18 +59,22 @@ if st.session_state['authenticated']:
         )
         st.divider()
 else:
+    public_pages = ['Home']
     active_page = 'Home'
 
 # Views
 # ==============================================================================
-if active_page == 'Painel':
-    private_views.dashboard.create_page()
-if active_page == 'Caixa':
-    private_views.cash.create_page()
+# if active_page == 'Painel':
+#     private_views.dashboard.create_page()
+# if active_page == 'Caixa':
+#     private_views.cash.create_page()
 if active_page == 'Dividendos':
     private_views.dividend.create_page()
 if active_page == 'Configurações':
     private_views.settings.create_page(authenticator)
+
+if active_page == 'Usuários':
+    private_views.manage_users.create_page()
 
 if active_page == 'Home':
     public_views.home.create_page(authenticator)

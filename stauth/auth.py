@@ -156,6 +156,7 @@ class Authenticator:
         if user is not None and check_pw(password, user['hashed_pw']):
             if not user.get('active'):
                 if save_state:
+                    st.session_state['authenticated'] = None
                     st.session_state['user'] = {'active': False}
                 return False
             if save_state:
