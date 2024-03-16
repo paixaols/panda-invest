@@ -1,1 +1,1 @@
-from . import dividend, manage_users, mock
+from . import account, dividend, manage_users, mock

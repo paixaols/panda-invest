@@ -28,8 +28,8 @@ authenticator = Authenticator(
 # ==============================================================================
 if st.session_state['authenticated']:
     private_pages = [
-        # ('Painel', 'columns'), ('Caixa', 'cash-stack'), 
-        ('Dividendos', 'coin'), 
+        # ('Painel', 'columns'), 
+        ('Caixa', 'cash-stack'), ('Dividendos', 'coin'), 
         ('---', ''), ('Configurações', 'gear')
     ]
     if st.session_state['user']['role'] == 'super-admin':
@@ -66,8 +66,8 @@ else:
 # ==============================================================================
 # if active_page == 'Painel':
 #     private_views.dashboard.create_page()
-# if active_page == 'Caixa':
-#     private_views.cash.create_page()
+if active_page == 'Caixa':
+    private_views.account.create_page()
 if active_page == 'Dividendos':
     private_views.dividend.create_page()
 if active_page == 'Configurações':
