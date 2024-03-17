@@ -1,3 +1,4 @@
+import datetime as dt
 import pandas as pd
 import streamlit as st
 
@@ -29,13 +30,18 @@ class Collection:
 
         if as_dataframe:
             if len(docs) == 0:
-                return pd.DataFrame(columns=self.fields)
+                return pd.DataFrame(columns=['_id']+self.fields)
             df = pd.DataFrame(docs)
             return df
 
         return docs
 
-    def insert_one(self, obj):
+    def insert_one(self, obj, datetime_fields={}):
+        # Convert datetime fields from string
+        for field in datetime_fields:
+            format = datetime_fields[field]
+            obj[field] = dt.datetime.strptime(obj[field], format)
+
         # Return False if fields are missing
         if not all( f in obj for f in self.fields ):
             return False
@@ -57,7 +63,15 @@ class Collection:
         result = collection.delete_many(query)
         return result.deleted_count
 
-    def update_one(self, userid, _id, update):
+    def update_one(self, userid, _id, update, datetime_fields={}):
+        for field in datetime_fields:
+            if field in update:
+                format = datetime_fields[field]
+                update[field] = dt.datetime.strptime(update[field], format)
+
+        # Filter extra fields
+        update = { k:v for k,v in update.items() if k in self.fields }
+
         collection = db[self.collection_name]
         query = {
             'userid': userid,
