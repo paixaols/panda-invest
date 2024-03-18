@@ -26,7 +26,7 @@ def delete_accounts(ids):
     if userid is None:
         return None
 
-    deleted_count = Account().delete_many(userid, ids)
+    deleted_count = Account().delete_many(ids)
     return deleted_count
 
 
@@ -35,5 +35,5 @@ def update_account(_id, update):
     if userid is None:
         return None
 
-    updated_count = Account().update_one(userid, _id, update)
+    updated_count = Account().update_one(_id, update)
     return updated_count

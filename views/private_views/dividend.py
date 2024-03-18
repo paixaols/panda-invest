@@ -28,7 +28,7 @@ def create_page():
     if not st.session_state['authenticated']:
         st.stop()
 
-    df, accounts = ctr.dividend.get_dividends()
+    df, accounts, assets = ctr.dividend.get_dividends()
 
     # Section history
     st.subheader('Histórico de pagamentos')
@@ -74,17 +74,17 @@ def create_page():
     ]
 
     # CRUD
-    assets = ['BBAS3', 'SLG', 'XPLG11']
     config = {
         '_id': None,
         'userid': None,
         'month': None,
         'currency': None,
         'account_id': None,
+        'asset_id': None,
         'date': st.column_config.DateColumn('Data', max_value=dt.date.today(), required=True),
         'asset': st.column_config.SelectboxColumn('Ativo', options=assets, required=True),
         'value': st.column_config.NumberColumn('Valor', min_value=0, required=True),
-        'bank': st.column_config.SelectboxColumn('Conta', options=accounts, required=True)
+        'account': st.column_config.SelectboxColumn('Conta', options=accounts, required=True)
     }
 
     st.data_editor(

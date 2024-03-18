@@ -32,8 +32,10 @@ if st.session_state['authenticated']:
         ('Caixa', 'cash-stack'), ('Dividendos', 'coin'), 
         ('---', ''), ('Configurações', 'gear')
     ]
+    if st.session_state['user']['role'] in ['admin', 'super-admin']:
+        private_pages.extend([('---', ''), ('Ativos', 'collection')])
     if st.session_state['user']['role'] == 'super-admin':
-        private_pages.append(('Usuários', 'people'))
+        private_pages.extend([('---', ''), ('Usuários', 'people')])
     page_names = [ p[0] for p in private_pages ]
     page_icons = [ p[1] for p in private_pages ]
     try:
@@ -64,6 +66,7 @@ else:
 
 # Views
 # ==============================================================================
+# User
 # if active_page == 'Painel':
 #     private_views.dashboard.create_page()
 if active_page == 'Caixa':
@@ -73,8 +76,14 @@ if active_page == 'Dividendos':
 if active_page == 'Configurações':
     private_views.settings.create_page(authenticator)
 
+# Admin
+if active_page == 'Ativos':
+    private_views.manage_assets.create_page()
+
+# Super-admin
 if active_page == 'Usuários':
     private_views.manage_users.create_page()
 
+# Public
 if active_page == 'Home':
     public_views.home.create_page(authenticator)

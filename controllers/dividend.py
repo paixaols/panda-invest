@@ -1,6 +1,6 @@
 import streamlit as st
 
-from models.collections import Account, Dividend
+from models.collections import Account, Asset, Dividend
 
 
 def get_dividends():
@@ -22,7 +22,19 @@ def get_dividends():
     df = df.merge(df_acc[['_id', 'bank', 'currency']], left_on='account_id', right_on='_id', suffixes=('', '_acc'))
     df.drop(columns=['_id_acc'], inplace=True)
 
-    return df, accounts
+    # Assets
+    df_ass = Asset().find(as_dataframe=True)
+    df_ass['ass_label'] = df_ass.apply(lambda x: f"{x['code']} (id: {x['_id']})", axis=1)
+    assets = df_ass['ass_label'].to_list()
+
+    # Merge dividend and account dataframes
+    df = df.merge(df_ass[['_id', 'code']], left_on='asset_id', right_on='_id', suffixes=('', '_ass'))
+    df.drop(columns=['_id_ass'], inplace=True)
+
+    # Rename merged columns
+    df.rename(columns={'bank': 'account', 'code': 'asset'}, inplace=True)
+
+    return df, accounts, assets
 
 
 def insert_dividend(obj):
@@ -31,7 +43,8 @@ def insert_dividend(obj):
         return None
 
     obj['userid'] = userid
-    obj['account_id'] = obj['bank'].split('id: ')[1].split(')')[0]
+    obj['account_id'] = obj['account'].split('id: ')[1].split(')')[0]
+    obj['asset_id'] = obj['asset'].split('id: ')[1].split(')')[0]
     inserted = Dividend().insert_one(obj, datetime_fields={'date': '%Y-%m-%d'})
     return inserted
 
@@ -41,11 +54,12 @@ def update_dividend(_id, update):
     if userid is None:
         return None
 
-    if 'bank' in update:
-        update['account_id'] = update['bank'].split('id: ')[1].split(')')[0]
+    if 'account' in update:
+        update['account_id'] = update['account'].split('id: ')[1].split(')')[0]
+    if 'asset' in update:
+        update['asset_id'] = update['asset'].split('id: ')[1].split(')')[0]
 
     updated_count = Dividend().update_one(
-        userid,
         _id,
         update,
         datetime_fields={'date': '%Y-%m-%d'}
@@ -58,5 +72,5 @@ def delete_dividends(ids):
     if userid is None:
         return None
 
-    deleted_count = Dividend().delete_many(userid, ids)
+    deleted_count = Dividend().delete_many(ids)
     return deleted_count

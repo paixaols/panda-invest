@@ -18,7 +18,7 @@ class Collection:
     def __init__(self):
         self.collection_name = str(self.__class__).split("'")[1].split('.')[-1].lower()
 
-    def find(self, filter, as_dataframe=False):
+    def find(self, filter={}, as_dataframe=False):
         collection = db[self.collection_name]
         cursor = collection.find(filter)
 
@@ -53,17 +53,15 @@ class Collection:
         result = db[self.collection_name].insert_one(obj)
         return result.acknowledged
 
-    def delete_many(self, userid, ids):
+    def delete_many(self, ids):
         collection = db[self.collection_name]
         object_ids = [ ObjectId(_id) for _id in ids ]
-        query = {
-            'userid': userid,
-            '_id': {'$in': object_ids}
-        }
-        result = collection.delete_many(query)
+        result = collection.delete_many(
+            {'_id': {'$in': object_ids}}
+        )
         return result.deleted_count
 
-    def update_one(self, userid, _id, update, datetime_fields={}):
+    def update_one(self, _id, update, datetime_fields={}):
         for field in datetime_fields:
             if field in update:
                 format = datetime_fields[field]
@@ -73,9 +71,8 @@ class Collection:
         update = { k:v for k,v in update.items() if k in self.fields }
 
         collection = db[self.collection_name]
-        query = {
-            'userid': userid,
-            '_id': ObjectId(_id)
-        }
-        result = collection.update_one(query, {'$set': update})
+        result = collection.update_one(
+            {'_id': ObjectId(_id)},
+            {'$set': update}
+        )
         return result.modified_count

@@ -1,1 +1,1 @@
-from . import account, dashboard, dividend, manage_users, settings
+from . import account, dashboard, dividend, manage_assets, manage_users, settings

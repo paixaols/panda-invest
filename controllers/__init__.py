@@ -1,1 +1,1 @@
-from . import account, dividend, manage_users
+from . import account, dividend, manage_assets, manage_users

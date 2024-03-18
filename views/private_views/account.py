@@ -29,7 +29,7 @@ def create_page():
 
     df = ctr.account.get_accounts()
 
-    currencies = ['BRL', 'EUR', 'UDS']
+    currencies = ['BRL', 'EUR', 'USD']
     config = {
         '_id': None,
         'userid': None,
