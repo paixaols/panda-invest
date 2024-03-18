@@ -4,7 +4,7 @@ from streamlit_option_menu import option_menu
 st.set_page_config(page_title='Panda Invest', page_icon=':panda_face:', layout='wide')
 
 from stauth import Authenticator
-from views import private_views, public_views
+from pages import private_pages, public_pages
 
 
 def set_param(key):
@@ -27,17 +27,17 @@ authenticator = Authenticator(
 # Main app
 # ==============================================================================
 if st.session_state['authenticated']:
-    private_pages = [
+    private_pages_list = [
         # ('Painel', 'columns'), 
         ('Caixa', 'cash-stack'), ('Dividendos', 'coin'), 
         ('---', ''), ('Configurações', 'gear')
     ]
     if st.session_state['user']['role'] in ['admin', 'super-admin']:
-        private_pages.extend([('---', ''), ('Ativos', 'collection')])
+        private_pages_list.extend([('---', ''), ('Ativos', 'collection')])
     if st.session_state['user']['role'] == 'super-admin':
-        private_pages.extend([('---', ''), ('Usuários', 'people')])
-    page_names = [ p[0] for p in private_pages ]
-    page_icons = [ p[1] for p in private_pages ]
+        private_pages_list.extend([('---', ''), ('Usuários', 'people')])
+    page_names = [ p[0] for p in private_pages_list ]
+    page_icons = [ p[1] for p in private_pages_list ]
     try:
         page_index = page_names.index(get_param('p'))
     except ValueError:
@@ -61,29 +61,29 @@ if st.session_state['authenticated']:
         )
         st.divider()
 else:
-    public_pages = ['Home']
+    public_pages_list = ['Home']
     active_page = 'Home'
 
 # Views
 # ==============================================================================
 # User
 # if active_page == 'Painel':
-#     private_views.dashboard.create_page()
+#     private_pages.dashboard.create_page()
 if active_page == 'Caixa':
-    private_views.account.create_page()
+    private_pages.account.create_page()
 if active_page == 'Dividendos':
-    private_views.dividend.create_page()
+    private_pages.dividend.create_page()
 if active_page == 'Configurações':
-    private_views.settings.create_page(authenticator)
+    private_pages.settings.create_page(authenticator)
 
 # Admin
 if active_page == 'Ativos':
-    private_views.manage_assets.create_page()
+    private_pages.manage_assets.create_page()
 
 # Super-admin
 if active_page == 'Usuários':
-    private_views.manage_users.create_page()
+    private_pages.manage_users.create_page()
 
 # Public
 if active_page == 'Home':
-    public_views.home.create_page(authenticator)
+    public_pages.home.create_page(authenticator)
