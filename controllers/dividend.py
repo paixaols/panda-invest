@@ -34,6 +34,9 @@ def get_dividends():
     # Rename merged columns
     df.rename(columns={'bank': 'account', 'code': 'asset'}, inplace=True)
 
+    # Create temporary *tax* field
+    df['tax'] = 0
+
     return df, accounts, assets
 
 
@@ -45,6 +48,7 @@ def insert_dividend(obj):
     obj['userid'] = userid
     obj['account_id'] = obj['account'].split('id: ')[1].split(')')[0]
     obj['asset_id'] = obj['asset'].split('id: ')[1].split(')')[0]
+    obj['value'] = obj['value']-obj['tax']
     inserted = Dividend().insert_one(obj, datetime_fields={'date': '%Y-%m-%d'})
     return inserted
 

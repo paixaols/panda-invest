@@ -83,13 +83,16 @@ def create_page():
         'asset_id': None,
         'date': st.column_config.DateColumn('Data', max_value=dt.date.today(), required=True),
         'asset': st.column_config.SelectboxColumn('Ativo', options=assets, required=True),
-        'value': st.column_config.NumberColumn('Valor', min_value=0, required=True),
+        'value': st.column_config.NumberColumn('Valor', min_value=0, step=0.01, required=True),
+        'tax': st.column_config.NumberColumn('Imposto', min_value=0, step=0.01, required=True),
         'account': st.column_config.SelectboxColumn('Conta', options=accounts, required=True)
     }
 
+    filtered_df.sort_values('date', inplace=True)
     st.data_editor(
         filtered_df,
         column_config=config,
+        column_order=['date', 'asset', 'value', 'tax', 'account'],
         hide_index=True,
         disabled=['_index'],
         key='dividend_crud',
