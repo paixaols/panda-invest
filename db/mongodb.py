@@ -61,18 +61,23 @@ class Collection:
         )
         return result.deleted_count
 
-    def update_one(self, _id, update, datetime_fields={}):
+    def update_one(self, _id, implement, datetime_fields={}):
         for field in datetime_fields:
-            if field in update:
+            if field in implement['$set']:
                 format = datetime_fields[field]
-                update[field] = dt.datetime.strptime(update[field], format)
+                implement['$set'][field] = dt.datetime.strptime(
+                    implement['$set'][field], format
+                )
 
         # Filter extra fields
-        update = { k:v for k,v in update.items() if k in self.fields }
+        if '$set' in implement:
+            implement['$set'] = { k:v for k,v in implement['$set'].items() if k in self.fields }
+        if '$inc' in implement:
+            implement['$inc'] = { k:v for k,v in implement['$inc'].items() if k in self.fields }
 
         collection = db[self.collection_name]
         result = collection.update_one(
             {'_id': ObjectId(_id)},
-            {'$set': update}
+            implement
         )
         return result.modified_count

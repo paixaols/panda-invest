@@ -35,6 +35,7 @@ def create_page():
         'userid': None,
         'bank': st.column_config.TextColumn('Banco', required=True),
         'currency': st.column_config.SelectboxColumn('Moeda', options=currencies, required=True),
+        'balance': st.column_config.NumberColumn('Saldo', min_value=0, step=0.01, required=True),
     }
 
     # CRUD

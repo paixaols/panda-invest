@@ -35,5 +35,8 @@ def update_account(_id, update):
     if userid is None:
         return None
 
-    updated_count = Account().update_one(_id, update)
+    updated_count = Account().update_one(
+        _id,
+        {'$set': update}
+    )
     return updated_count

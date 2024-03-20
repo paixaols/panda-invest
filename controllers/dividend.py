@@ -50,6 +50,13 @@ def insert_dividend(obj):
     obj['asset_id'] = obj['asset'].split('id: ')[1].split(')')[0]
     obj['value'] = obj['value']-obj['tax']
     inserted = Dividend().insert_one(obj, datetime_fields={'date': '%Y-%m-%d'})
+
+    # Update account balance
+    Account().update_one(
+        obj['account_id'],
+        {'$inc': {'balance': obj['value']}}
+    )
+
     return inserted
 
 
@@ -58,14 +65,20 @@ def update_dividend(_id, update):
     if userid is None:
         return None
 
-    if 'account' in update:
-        update['account_id'] = update['account'].split('id: ')[1].split(')')[0]
-    if 'asset' in update:
-        update['asset_id'] = update['asset'].split('id: ')[1].split(')')[0]
-
+    implement = {'$set': {}, '$inc': {}}
+    for k, v in update.items():
+        if k == 'account':
+            implement['$set']['account_id'] = v.split('id: ')[1].split(')')[0]
+        elif k == 'asset':
+            implement['$set']['asset_id'] = v.split('id: ')[1].split(')')[0]
+        elif k == 'tax':
+            implement['$inc']['value'] = -v
+        else:
+            implement['$set'][k] = v
+    
     updated_count = Dividend().update_one(
         _id,
-        update,
+        implement,
         datetime_fields={'date': '%Y-%m-%d'}
     )
     return updated_count

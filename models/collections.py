@@ -4,7 +4,7 @@ from db.mongodb import Collection
 class Account(Collection):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields = ['userid', 'bank', 'currency']
+        self.fields = ['userid', 'bank', 'currency', 'balance']
 
 
 class Asset(Collection):

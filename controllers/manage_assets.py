@@ -33,5 +33,8 @@ def update_asset(_id, update):
     if user.get('role') not in ['admin', 'super-admin']:
         return None
 
-    updated_count = Asset().update_one(_id, update)
+    updated_count = Asset().update_one(
+        _id,
+        {'$set': update}
+    )
     return updated_count
