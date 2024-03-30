@@ -6,6 +6,8 @@ from bson import ObjectId
 
 from db import mongodb_engine as engine
 
+INSERT_COOLDOWN = 1
+
 
 @st.cache_resource
 def get_database():
@@ -37,6 +39,11 @@ class Collection:
         return docs
 
     def insert_one(self, obj, datetime_fields={}):
+        last_insert = st.session_state.get('last_insert')
+        if last_insert is not None:
+            if dt.datetime.now().timestamp()-last_insert < INSERT_COOLDOWN:
+                return False
+
         # Convert datetime fields from string
         for field in datetime_fields:
             format = datetime_fields[field]
@@ -51,6 +58,8 @@ class Collection:
 
         # Insert object
         result = db[self.collection_name].insert_one(obj)
+        st.session_state['last_insert'] = dt.datetime.now().timestamp()
+
         return result.acknowledged
 
     def delete_many(self, ids):
