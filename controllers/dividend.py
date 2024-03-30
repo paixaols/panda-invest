@@ -52,10 +52,11 @@ def insert_dividend(obj):
     inserted = Dividend().insert_one(obj, datetime_fields={'date': '%Y-%m-%d'})
 
     # Update account balance
-    Account().update_one(
-        obj['account_id'],
-        {'$inc': {'balance': obj['value']}}
-    )
+    if inserted:
+        Account().update_one(
+            obj['account_id'],
+            {'$inc': {'balance': obj['value']}}
+        )
 
     return inserted
 
