@@ -50,9 +50,8 @@ def create_new_user(new_user_data: dict) -> bool:
     bool
         Acknowledgement of the insertion operation.
     '''
-    id_field_name = new_user_data['id_type']
     new_user = {
-        id_field_name: new_user_data['userid'],
+        'email': new_user_data['email'],
         'first_name': new_user_data['first_name'],
         'last_name': new_user_data['last_name'],
         'hashed_pw': hash_pw(new_user_data['password']),
