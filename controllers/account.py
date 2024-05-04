@@ -4,7 +4,7 @@ from models.collections import Account
 
 
 def get_accounts():
-    userid = st.session_state['user'].get('userid')
+    userid = st.session_state['user'].get('email')
     if userid is None:
         return None
 

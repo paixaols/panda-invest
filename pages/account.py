@@ -34,23 +34,23 @@ def save_changes(df):
             ctr.account.update_account(_id, v)
 
 
-# df = ctr.account.get_accounts()
+df = ctr.account.get_accounts()
 
-# currencies = ['BRL', 'EUR', 'USD']
-# config = {
-#     '_id': None,
-#     'userid': None,
-#     'bank': st.column_config.TextColumn('Banco', required=True),
-#     'currency': st.column_config.SelectboxColumn('Moeda', options=currencies, required=True),
-#     'balance': st.column_config.NumberColumn('Saldo', min_value=0, step=0.01, required=True),
-# }
+currencies = ['BRL', 'EUR', 'USD']
+config = {
+    '_id': None,
+    'userid': None,
+    'bank': st.column_config.TextColumn('Banco', required=True),
+    'currency': st.column_config.SelectboxColumn('Moeda', options=currencies, required=True),
+    'balance': st.column_config.NumberColumn('Saldo', min_value=0, step=0.01, required=True),
+}
 
-# # CRUD
-# st.data_editor(
-#     df,
-#     column_config=config,
-#     key='account_crud',
-#     num_rows='dynamic',
-#     on_change=save_changes,
-#     args=[df]
-# )
+# CRUD
+st.data_editor(
+    df,
+    column_config=config,
+    key='account_crud',
+    num_rows='dynamic',
+    on_change=save_changes,
+    args=[df]
+)
