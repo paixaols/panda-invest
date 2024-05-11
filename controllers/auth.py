@@ -15,10 +15,10 @@ def authenticate(userid, password):
     user = db_tools.get_user(userid)
 
     if user is None:
-        return {'success': False, 'message': message[1], 'error': 1}
+        return {'success': False, 'message': message[1], 'status': 200}
 
     if not user.get('active'):
-        return {'success': False, 'message': message[2], 'error': 2}
+        return {'success': False, 'message': message[2], 'status': 200}
 
     if check_pw(password, user['hashed_pw']):
         st.session_state['authenticated'] = True
@@ -29,8 +29,8 @@ def authenticate(userid, password):
             'active': user['active'],
             'role': user['role']
         }
-        return {'success': True, 'message': message[0], 'error': 0}
-    return {'success': False, 'message': message[1], 'error': 1}
+        return {'success': True, 'message': message[0], 'status': 200}
+    return {'success': False, 'message': message[1], 'status': 200}
 
 
 def user_registration(user_data):
@@ -49,27 +49,27 @@ def user_registration(user_data):
     # Verifica presença dos campos requeridos
     required_fields = ['email', 'first_name', 'last_name', 'password', 'repeat_password']
     if not all([ f in user_data for f in required_fields ]):
-        return {'success': False, 'message': message[1], 'error': 1}
+        return {'success': False, 'message': message[1], 'status': 200}
     if any([ user_data[f] == '' for f in required_fields ]):
-        return {'success': False, 'message': message[1], 'error': 1}
+        return {'success': False, 'message': message[1], 'status': 200}
 
     # Validação dos dados
     validator = Validator()
     if not validator.validate_email(user_data['email']):
-        return {'success': False, 'message': message[2], 'error': 2}
+        return {'success': False, 'message': message[2], 'status': 200}
     if not validator.validate_name(user_data['first_name']):
-        return {'success': False, 'message': message[3], 'error': 3}
+        return {'success': False, 'message': message[3], 'status': 200}
     if not validator.validate_name(user_data['last_name']):
-        return {'success': False, 'message': message[4], 'error': 4}
+        return {'success': False, 'message': message[4], 'status': 200}
     if user_data['password'] != user_data['repeat_password']:
-        return {'success': False, 'message': message[5], 'error': 5}
+        return {'success': False, 'message': message[5], 'status': 200}
     if not validator.validate_password(user_data['password']):
-        return {'success': False, 'message': message[6], 'error': 6}
+        return {'success': False, 'message': message[6], 'status': 200}
 
     # Criação do usuário
     user = db_tools.get_user(user_data.get('email'))
     if user is not None:
-        return {'success': False, 'message': message[7], 'error': 7}
+        return {'success': False, 'message': message[7], 'status': 200}
 
     user_created = db_tools.create_new_user({
         'email': user_data['email'],
@@ -78,9 +78,9 @@ def user_registration(user_data):
         'password': user_data['password']
     })
     if user_created:
-        return {'success': True, 'message': message[0], 'error': 0}
+        return {'success': True, 'message': message[0], 'status': 200}
     else:
-        return {'success': False, 'message': message[8], 'error': 8}
+        return {'success': False, 'message': message[8], 'status': 500}
 
 
 def update_user_data(field, value):
@@ -93,21 +93,21 @@ def update_user_data(field, value):
     ]
     user = st.session_state['user']
     if field not in user:
-        return {'success': False, 'message': message[1].format(field), 'error': 1}
+        return {'success': False, 'message': message[1].format(field), 'status': 400}
 
     # Validação dos dados
     validator = Validator()
     if not validator.validate_name(value):
-        return {'success': False, 'message': message[2], 'error': 2}
+        return {'success': False, 'message': message[2], 'status': 200}
 
     if user[field] == value:
-        return {'success': False, 'message': message[3], 'error': 3}
+        return {'success': False, 'message': message[3], 'status': 200}
 
     if db_tools.update_user_info(user['email'], field, value):
         st.session_state['user'][field] = value
-        return {'success': True, 'message': message[0], 'error': 0}
+        return {'success': True, 'message': message[0], 'status': 200}
     else:
-        return {'success': False, 'message': message[4], 'error': 4}
+        return {'success': False, 'message': message[4], 'status': 500}
 
 
 def logout():

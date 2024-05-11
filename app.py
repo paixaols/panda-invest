@@ -20,7 +20,7 @@ def authenticated_menu():
             if st.button('Sair'):
                 ctr.auth.logout()
                 st.switch_page('app.py')
-        st.page_link('pages/account.py', label='Caixa')
+        st.page_link('pages/accounts.py', label='Caixa')
         st.divider()
         st.page_link('pages/settings.py', label='Configurações')
 

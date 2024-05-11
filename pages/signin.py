@@ -25,8 +25,8 @@ with col1:
     if submit:
         response = ctr.auth.authenticate(email, password)
         if response['success']:
-            st.switch_page('pages/account.py')
-        if response['error']:
+            st.switch_page('pages/accounts.py')
+        else:
             st.error(response['message'], icon='❌')
 
 # Register user form
