@@ -24,6 +24,9 @@ def authenticated_menu():
         st.page_link('pages/dividend.py', label='Dividendos')
         st.divider()
         st.page_link('pages/settings.py', label='Configurações')
+        if st.session_state['user']['role'] in ['admin', 'super-admin']:
+            st.divider()
+            st.page_link('pages/manage_assets.py', label='Ativos')
 
 
 def unauthenticated_menu():
