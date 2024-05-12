@@ -27,6 +27,8 @@ def authenticated_menu():
         if st.session_state['user']['role'] in ['admin', 'super-admin']:
             st.divider()
             st.page_link('pages/manage_assets.py', label='Ativos')
+        if st.session_state['user']['role'] == 'super-admin':
+            st.page_link('pages/manage_users.py', label='Usuários')
 
 
 def unauthenticated_menu():

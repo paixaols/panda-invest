@@ -12,23 +12,43 @@ def get_database():
 db = get_database()
 
 
-def get_user(userid):
+def get_user(email):
+    if not st.session_state['authenticated']:
+        return {'success': False, 'message': 'Login required', 'status': 400}
+
+    user = st.session_state['user']
+    if user['role'] != 'super-admin':
+        return {'success': False, 'message': 'Forbidden', 'status': 400}
+
     collection = db['users']
-    query = {'email': userid}
+    query = {'email': email}
     doc = collection.find_one(query)
-    if doc is None:
-        return None
-    doc['_id'] = str(doc['_id'])
-    return doc
+    if doc is not None:
+        doc['_id'] = str(doc['_id'])
+    return {
+        'success': True,
+        'data': doc,
+        'message': '',
+        'status': 200
+    }
 
 
 def update_account(_id, update):
-    if st.session_state['user']['role'] != 'super-admin':
-        return False
+    if not st.session_state['authenticated']:
+        return {'success': False, 'message': 'Login required', 'status': 400}
+
+    user = st.session_state['user']
+    if user['role'] != 'super-admin':
+        return {'success': False, 'message': 'Forbidden', 'status': 400}
 
     collection = db['users']
     result = collection.update_one(
         {'_id': ObjectId(_id)},
         {'$set': update}
     )
-    return result.modified_count == 1
+    return {
+        'success': result.modified_count == 1,
+        'data': {'updated_count': result.modified_count},
+        'message': '',
+        'status': 200 if result.modified_count == 1 else 500
+    }
