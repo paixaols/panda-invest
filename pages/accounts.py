@@ -11,30 +11,30 @@ from app import login_required, menu
 
 login_required()
 menu()
-st.write('Contas')
 
 
 def save_changes(df):
     # Insert
     addition = st.session_state['account_crud']['added_rows']
     if len(addition) > 0:
-        inserted = ctr.account.create_account(addition[0])
+        ctr.accounts.create_bank_account(addition[0])
 
     # Delete
     deletion = st.session_state['account_crud']['deleted_rows']
     if len(deletion) > 0:
         ids = df.iloc[deletion].loc[:, '_id'].tolist()
-        ctr.account.delete_accounts(ids)
+        ctr.accounts.delete_bank_accounts(ids)
 
     # Update
     edition = st.session_state['account_crud']['edited_rows']
     if len(edition) > 0:
         for k, v in edition.items():
             _id = df['_id'].iloc[k]
-            ctr.account.update_account(_id, v)
+            ctr.accounts.update_bank_account(_id, v)
 
 
-df = ctr.account.get_accounts()
+response = ctr.accounts.get_bank_accounts()
+df = response['data']
 
 currencies = ['BRL', 'EUR', 'USD']
 config = {

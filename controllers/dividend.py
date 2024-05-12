@@ -4,9 +4,10 @@ from models.collections import Account, Asset, Dividend
 
 
 def get_dividends():
-    userid = st.session_state['user'].get('userid')
-    if userid is None:
-        return None
+    if not st.session_state['authenticated']:
+        return {'success': False, 'message': 'Login required', 'status': 400}
+
+    userid = st.session_state['user']['email']
 
     # User's dividends
     df = Dividend().find({'userid': userid}, as_dataframe=True)
@@ -37,13 +38,19 @@ def get_dividends():
     # Create temporary *tax* field
     df['tax'] = 0
 
-    return df, accounts, assets
+    return {
+        'success': True,
+        'data': {'df': df, 'accounts': accounts, 'assets': assets},
+        'message': '',
+        'status': 200
+    }
 
 
 def insert_dividend(obj):
-    userid = st.session_state['user'].get('userid')
-    if userid is None:
-        return None
+    if not st.session_state['authenticated']:
+        return {'success': False, 'message': 'Login required', 'status': 400}
+
+    userid = st.session_state['user']['email']
 
     obj['userid'] = userid
     obj['account_id'] = obj['account'].split('id: ')[1].split(')')[0]
@@ -57,14 +64,13 @@ def insert_dividend(obj):
             obj['account_id'],
             {'$inc': {'balance': obj['value']}}
         )
-
-    return inserted
+        return {'success': True, 'message': '', 'status': 200}
+    return {'success': False, 'message': '', 'status': 500}
 
 
 def update_dividend(_id, update):
-    userid = st.session_state['user'].get('userid')
-    if userid is None:
-        return None
+    if not st.session_state['authenticated']:
+        return {'success': False, 'message': 'Login required', 'status': 400}
 
     implement = {'$set': {}, '$inc': {}}
     for k, v in update.items():
@@ -82,13 +88,22 @@ def update_dividend(_id, update):
         implement,
         datetime_fields={'date': '%Y-%m-%d'}
     )
-    return updated_count
+    return {
+        'success': True,
+        'data': {'updated_count': updated_count},
+        'message': '',
+        'status': 200
+    }
 
 
 def delete_dividends(ids):
-    userid = st.session_state['user'].get('userid')
-    if userid is None:
-        return None
+    if not st.session_state['authenticated']:
+        return {'success': False, 'message': 'Login required', 'status': 400}
 
     deleted_count = Dividend().delete_many(ids)
-    return deleted_count
+    return {
+        'success': True,
+        'data': {'deleted_count': deleted_count},
+        'message': '',
+        'status': 200
+    }

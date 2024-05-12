@@ -21,6 +21,7 @@ def authenticated_menu():
                 ctr.auth.logout()
                 st.switch_page('app.py')
         st.page_link('pages/accounts.py', label='Caixa')
+        st.page_link('pages/dividend.py', label='Dividendos')
         st.divider()
         st.page_link('pages/settings.py', label='Configurações')
 
