@@ -6,7 +6,7 @@ from bson import ObjectId
 
 from db import mongodb_engine as engine
 
-INSERT_COOLDOWN = 1
+INSERT_COOLDOWN = 1# cooldown time in seconds
 
 
 @st.cache_resource
@@ -21,6 +21,8 @@ class Collection:
         self.collection_name = str(self.__class__).split("'")[1].split('.')[-1].lower()
 
     def find(self, filter={}, as_dataframe=False):
+        if '_id' in filter:
+            filter['_id'] = ObjectId(filter['_id'])
         collection = db[self.collection_name]
         cursor = collection.find(filter)
 
@@ -38,7 +40,7 @@ class Collection:
 
         return docs
 
-    def insert_one(self, obj, datetime_fields={}):
+    def insert_one(self, obj, datetime_fields={}, missing_fields='abort'):
         last_insert = st.session_state.get('last_insert')
         if last_insert is not None:
             if dt.datetime.now().timestamp()-last_insert < INSERT_COOLDOWN:
@@ -49,9 +51,11 @@ class Collection:
             format = datetime_fields[field]
             obj[field] = dt.datetime.strptime(obj[field], format)
 
-        # Return False if fields are missing
-        if not all( f in obj for f in self.fields ):
-            return False
+        # If missing_fields is 'ignore' save just the existing fields, ignoring the missing ones
+        if missing_fields != 'ignore':
+            # Return False if fields are missing
+            if not all( f in obj for f in self.fields ):
+                return False
 
         # Filter extra fields
         obj = { k:v for k,v in obj.items() if k in self.fields }

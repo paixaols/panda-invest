@@ -7,9 +7,9 @@ def get_assets():
     if not st.session_state['authenticated']:
         return {'success': False, 'message': 'Login required', 'status': 400}
 
-    user = st.session_state['user']
-    if user['role'] not in ['admin', 'super-admin']:
-        return {'success': False, 'message': 'Forbidden', 'status': 400}
+    # user = st.session_state['user']
+    # if user['role'] not in ['admin', 'super-admin']:
+    #     return {'success': False, 'message': 'Forbidden', 'status': 400}
 
     assets = Asset().find(as_dataframe=True)
     return {

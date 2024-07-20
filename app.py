@@ -20,10 +20,14 @@ def authenticated_menu():
             if st.button('Sair'):
                 ctr.auth.logout()
                 st.switch_page('app.py')
+        # User pages
         st.page_link('pages/accounts.py', label='Caixa')
         st.page_link('pages/dividend.py', label='Dividendos')
+        st.page_link('pages/transaction.py', label='Transações')
+        # Config
         st.divider()
         st.page_link('pages/settings.py', label='Configurações')
+        # Admin
         if st.session_state['user']['role'] in ['admin', 'super-admin']:
             st.divider()
             st.page_link('pages/manage_assets.py', label='Ativos')
