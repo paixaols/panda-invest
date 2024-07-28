@@ -6,6 +6,8 @@ import streamlit as st
 #     layout='wide'
 # )
 
+import datetime as dt
+
 import controllers as ctr
 from app import login_required, menu
 
@@ -51,6 +53,7 @@ config = {
     'name': st.column_config.TextColumn('Nome', required=True),
     'description': st.column_config.TextColumn('Descrição', required=True),
     'code': st.column_config.TextColumn('Código', required=True),
+    'maturity': st.column_config.DateColumn('Vencimento', min_value=dt.date.today()),
     'type': st.column_config.SelectboxColumn('Tipo', options=asset_types, required=True),
     'currency': st.column_config.SelectboxColumn('Moeda', options=currencies, required=True),
 }
@@ -58,6 +61,7 @@ config = {
 st.data_editor(
     df,
     column_config=config,
+    column_order=['name', 'description', 'code', 'maturity', 'type', 'currency'],
     key='asset_mngmt_crud',
     num_rows='dynamic',
     on_change=save_changes,

@@ -1,3 +1,4 @@
+import datetime as dt
 import streamlit as st
 
 from models.collections import Asset
@@ -28,6 +29,10 @@ def create_asset(obj):
     if user['role'] not in ['admin', 'super-admin']:
         return {'success': False, 'message': 'Forbidden', 'status': 400}
 
+    if 'maturity' in obj:
+        obj['maturity'] = dt.datetime.strptime(obj['maturity'], '%Y-%m-%d')
+    else:
+        obj['maturity'] = None
     inserted = Asset().insert_one(obj)
     if inserted:
         return {'success': True, 'message': '', 'status': 200}
@@ -60,6 +65,8 @@ def update_asset(_id, update):
     if user['role'] not in ['admin', 'super-admin']:
         return {'success': False, 'message': 'Forbidden', 'status': 400}
 
+    if 'maturity' in update:
+        update['maturity'] = dt.datetime.strptime(update['maturity'], '%Y-%m-%d')
     updated_count = Asset().update_one(
         _id,
         {'$set': update}

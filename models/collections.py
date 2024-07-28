@@ -10,7 +10,7 @@ class Account(Collection):
 class Asset(Collection):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields = ['name', 'description', 'code', 'type', 'currency']
+        self.fields = ['name', 'description', 'maturity', 'code', 'type', 'currency']
 
 
 class Dividend(Collection):
