@@ -4,7 +4,7 @@ import locale
 currency_symbol = {
     'BRL': 'R$',
     'EUR': '€',
-    'USD': '$',
+    'USD': 'US$',
 }
 
 

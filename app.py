@@ -21,6 +21,7 @@ def authenticated_menu():
                 ctr.auth.logout()
                 st.switch_page('app.py')
         # User pages
+        st.page_link('pages/dashboard.py', label='Painel')
         st.page_link('pages/accounts.py', label='Caixa')
         st.page_link('pages/dividend.py', label='Dividendos')
         st.page_link('pages/transaction.py', label='Transações')
@@ -59,8 +60,8 @@ def login_required():
     '''
     Redirect users to the main page if not logged in
     '''
-    if 'authenticated' not in st.session_state or st.session_state['authenticated'] is None:
-        st.switch_page('app.py')
+    if not st.session_state.get('authenticated'):
+        st.switch_page('pages/signin.py')
 
 
 menu()
