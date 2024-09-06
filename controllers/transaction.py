@@ -107,7 +107,7 @@ def get_transactions():
     df_acc['acc_label'] = df_acc.apply(lambda x: f"{x['bank']} (id: {x['_id']})", axis=1)
     accounts = df_acc['acc_label'].to_list()
 
-    # Merge dividend and account dataframes
+    # Merge transaction and account dataframes
     df = df.merge(df_acc[['_id', 'bank']], left_on='account_id', right_on='_id', suffixes=('', '_acc'))
     df.drop(columns=['_id_acc'], inplace=True)
 
@@ -116,12 +116,12 @@ def get_transactions():
     df_ass['ass_label'] = df_ass.apply(lambda x: f"{x['code']} (id: {x['_id']})", axis=1)
     assets = df_ass['ass_label'].to_list()
 
-    # Merge dividend and account dataframes
-    df = df.merge(df_ass[['_id', 'code']], left_on='asset_id', right_on='_id', suffixes=('', '_ass'))
+    # Merge transaction and asset dataframes
+    df = df.merge(df_ass[['_id', 'name', 'code']], left_on='asset_id', right_on='_id', suffixes=('', '_ass'))
     df.drop(columns=['_id_ass'], inplace=True)
 
     # Rename merged columns
-    df.rename(columns={'bank': 'account', 'code': 'asset'}, inplace=True)
+    df.rename(columns={'bank': 'account', 'name': 'asset', 'code': 'asset_code'}, inplace=True)
 
     return df, accounts, assets
 

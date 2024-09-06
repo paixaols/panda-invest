@@ -85,7 +85,7 @@ response = ctr.accounts.get_bank_accounts()
 account_options = list(response['data'][['_id', 'bank']].to_records(index=False))
 
 response = ctr.manage_assets.get_assets()
-asset_options = list(response['data'][['_id', 'code']].to_records(index=False))
+asset_options = list(response['data'][['_id', 'name', 'code']].to_records(index=False))
 
 # General info
 with st.container(border=True):
@@ -102,7 +102,7 @@ with st.container(border=True):
     )
     asset = st.selectbox(
         'Ativo',
-        [ f'{x[1]} (id: {x[0]})' for x in asset_options ],
+        [ f'{x[1]} - {x[2]} (id: {x[0]})' for x in asset_options ],
         index=None,
         placeholder='Selecione uma opção'
     )
