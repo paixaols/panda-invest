@@ -22,6 +22,10 @@ locale.setlocale(locale.LC_ALL, 'pt_BR')
 response = ctr.portfolio.get_portfolio()
 portfolio = response['data']
 
+if len(portfolio) == 0:
+    st.warning('Nada encontrado. Insira seus dados na tela *Transações*.', icon='⚠️')
+    st.stop()
+
 # Parse portfolio
 agg = []
 for p in portfolio:
@@ -33,10 +37,23 @@ agg_hist = agg_hist.reset_index().rename(columns={'index': 'currency'}).set_inde
 
 currencies = agg_hist['currency'].unique()
 
-# Timeframe
+# Extend columns to include Caixa, RF, RV
+should_have = {'Caixa', 'RF', 'RV'}
+has = set(agg_hist.columns)
+for c in should_have-has:
+    agg_hist[c] = 0
+agg_hist = agg_hist[['currency', 'Caixa', 'RF', 'RV']]
+agg_hist.fillna(0, inplace=True)
+agg_hist['Total'] = agg_hist[['Caixa', 'RF', 'RV']].apply(sum, axis=1)
+
+# Choose timeframe
 cols = st.columns(len(currencies)+1)
 TF_ALL = 'Tudo'
-timeframe = cols[-1].selectbox('Timeframe', ['12M', '6M', '3M', TF_ALL], label_visibility='hidden')
+timeframe = cols[-1].selectbox(
+    'Timeframe',
+    ['12M', '6M', '3M', TF_ALL],
+    label_visibility='hidden'
+)
 
 # Filter selected timeframe
 if timeframe != TF_ALL:
@@ -79,9 +96,10 @@ for i in range(len(currencies)):
     tabs[i].area_chart(agg_currency_hist.drop(columns='Total'))
 
     # Current values
-    agg_currency = agg_currency_hist.iloc[[-1]].T.copy()
-    agg_currency.columns = ['Valor']
-    total = agg_currency.iloc[-1, 0]
-    agg_currency['Valor %'] = agg_currency['Valor'].apply(lambda x: locale.format_string('%.2f%%', 100*x/total))
-    agg_currency['Valor'] = agg_currency['Valor'].apply(lambda x: format_currency(x, currency))
-    tabs[i].dataframe(agg_currency, use_container_width=True)
+    if len(agg_currency_hist) > 0:
+        agg_currency = agg_currency_hist.iloc[[-1]].T.copy()
+        agg_currency.columns = ['Valor']
+        total = agg_currency.iloc[-1, 0]
+        agg_currency['Valor %'] = agg_currency['Valor'].apply(lambda x: locale.format_string('%.2f%%', 100*x/total))
+        agg_currency['Valor'] = agg_currency['Valor'].apply(lambda x: format_currency(x, currency))
+        tabs[i].dataframe(agg_currency, use_container_width=True)

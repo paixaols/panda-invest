@@ -56,7 +56,7 @@ if event is not None:
     df = df[df['event'] == event]
     df.reset_index(drop=True, inplace=True)
 df['selected'] = False
-df.sort_values('date', inplace=True)
+df.sort_values('date', ascending=False, inplace=True)
 df.reset_index(inplace=True, drop=True)
 
 # Table
