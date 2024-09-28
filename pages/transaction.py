@@ -32,11 +32,11 @@ event = st.selectbox(
     placeholder='Selecione um tipo de evento',
 )
 if event == 'Compra' or event == 'Venda':
-    column_order = ['date', 'event', 'asset', 'quantity', 'value', 'tax', 'account']
+    column_order = ['date', 'event', 'asset', 'asset_code', 'quantity', 'value', 'tax', 'account']
 elif event in ['Desdobramento', 'Grupamento']:
-    column_order = ['date', 'event', 'asset', 'pre_split', 'post_split', 'account']
+    column_order = ['date', 'event', 'asset', 'asset_code', 'pre_split', 'post_split', 'account']
 else:
-    column_order = ['date', 'event', 'asset', 'account']
+    column_order = ['date', 'event', 'asset', 'asset_code', 'account']
 
 # Action buttons
 col1, col2, col3, _ = st.columns(4)
@@ -56,7 +56,7 @@ if event is not None:
     df = df[df['event'] == event]
     df.reset_index(drop=True, inplace=True)
 df['selected'] = False
-df.sort_values('date', inplace=True)
+df.sort_values('date', ascending=False, inplace=True)
 df.reset_index(inplace=True, drop=True)
 
 # Table
@@ -68,6 +68,7 @@ config = {
     'date': st.column_config.DateColumn('Data', format='DD/MM/YYYY'),
     'event': st.column_config.TextColumn('Evento'),
     'asset': st.column_config.TextColumn('Ativo'),
+    'asset_code': st.column_config.TextColumn('Código'),
     'pre_split': st.column_config.NumberColumn(
         'Fator pré',
         help='Fator pré grupamento ou desdobramento de ações'

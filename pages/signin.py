@@ -25,7 +25,7 @@ with col1:
     if submit:
         response = ctr.auth.authenticate(email, password)
         if response['success']:
-            st.switch_page('pages/accounts.py')
+            st.switch_page('pages/dashboard.py')
         else:
             st.error(response['message'], icon='❌')
 

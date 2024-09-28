@@ -34,3 +34,13 @@ class Transaction(Collection):
             'fee',
             'value',
         ]
+
+
+class Portfolio(Collection):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields = [
+            'userid',
+            'dt_updated',
+            'agg',
+        ]
