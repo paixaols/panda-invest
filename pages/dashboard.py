@@ -16,7 +16,7 @@ from tools import format_currency
 login_required()
 menu()
 
-locale.setlocale(locale.LC_ALL, 'pt_BR')
+# locale.setlocale(locale.LC_ALL, 'pt_BR')
 
 # Data
 response = ctr.portfolio.get_portfolio()
