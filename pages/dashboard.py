@@ -30,7 +30,7 @@ if len(portfolio) == 0:
 agg = []
 for p in portfolio:
     aux = pd.DataFrame(p['agg']).T
-    aux['date'] = p['dt_updated']
+    aux['date'] = p['base_date']
     agg.append(aux)
 agg_hist = pd.concat(agg)
 agg_hist = agg_hist.reset_index().rename(columns={'index': 'currency'}).set_index('date')

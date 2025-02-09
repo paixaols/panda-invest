@@ -41,6 +41,6 @@ class Portfolio(Collection):
         super().__init__(*args, **kwargs)
         self.fields = [
             'userid',
-            'dt_updated',
+            'base_date',
             'agg',
         ]
