@@ -44,3 +44,13 @@ class Portfolio(Collection):
             'base_date',
             'agg',
         ]
+
+
+class Wallet(Collection):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields = [
+            'userid',
+            'base_month',
+            'investment',
+        ]
