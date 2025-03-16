@@ -2,7 +2,7 @@ import datetime as dt
 import pandas as pd
 import streamlit as st
 
-from models.collections import Portfolio, Wallet
+from models.collections import Account, Asset, Portfolio, Wallet
 
 
 def get_portfolio():
@@ -25,11 +25,37 @@ def get_wallet():
         return {'success': False, 'message': 'Login required', 'status': 400}
 
     userid = st.session_state['user'].get('email')
+
+    # Wallet
     w = Wallet().find({'userid': userid})
+    if len(w) == 0:
+        return {'success': True, 'data': None, 'message': '', 'status': 200}
+
+    df = pd.DataFrame(w[0]['investment'])
+
+    # User's accounts
+    df_acc = Account().find({'userid': userid}, as_dataframe=True)
+    df_acc.rename(columns={'_id': 'account_id'}, inplace=True)
+
+    # Assets
+    df_ass = Asset().find(as_dataframe=True)
+    df_ass.rename(columns={
+        '_id': 'asset_id', 'name': 'asset'
+    }, inplace=True)
+
+    # Merge
+    df = df.merge(df_acc[['account_id', 'bank']], on='account_id')
+    df = df.merge(df_ass[[
+        'asset_id', 'asset', 'code', 'type', 'currency', 'maturity'
+    ]], on='asset_id')
+
+    df['invest_group'] = df['type'].apply(lambda x: x.split(' | ')[0])
+    df['asset_group'] = df['type'].apply(lambda x: x.split(' | ')[1])
+    df['value'] = df['quantity']*df['price']
 
     return {
         'success': True,
-        'data': w,
+        'data': df,
         'message': '',
         'status': 200
     }
