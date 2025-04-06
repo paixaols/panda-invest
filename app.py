@@ -25,7 +25,9 @@ def authenticated_menu():
         st.page_link('pages/accounts.py', label='Caixa')
         st.page_link('pages/dividend.py', label='Dividendos')
         st.page_link('pages/transaction.py', label='Transações')
-        st.page_link('pages/portfolio.py', label='Portfólio')
+        st.markdown('### Investimentos')
+        st.page_link('pages/portfolio_fi.py', label='Renda Fixa')
+        st.page_link('pages/portfolio_vi.py', label='Renda Variável')
         # Config
         st.divider()
         st.page_link('pages/settings.py', label='Configurações')
