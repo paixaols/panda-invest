@@ -20,7 +20,7 @@ def get_portfolio():
     }
 
 
-def get_wallet():
+def get_wallet(invest_group='all'):
     if not st.session_state['authenticated']:
         return {'success': False, 'message': 'Login required', 'status': 400}
 
@@ -52,6 +52,11 @@ def get_wallet():
     df['invest_group'] = df['type'].apply(lambda x: x.split(' | ')[0])
     df['asset_group'] = df['type'].apply(lambda x: x.split(' | ')[1])
     df['value'] = df['quantity']*df['price']
+
+    if invest_group != 'all':
+        df = df[df['invest_group'] == invest_group]
+        if df.empty:
+            df = None
 
     return {
         'success': True,
